@@ -1,4 +1,4 @@
-.switch-mode-button {
+.switch-mode-button, .publish-button, .author-button {
   position: fixed;
   bottom: 20px;
   right: 20px;
@@ -9,4 +9,21 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-bottom: 10px; /* Added margin to separate buttons */
+}
+
+.publish-button {
+  background-color: #28a745; /* Green for Publish button */
+}
+
+.author-button {
+  background-color: #ffc107; /* Yellow for Author button */
+}
+
+.switch-mode-button + .publish-button {
+  bottom: 60px; /* Move Publish button above View as Published */
+}
+
+.publish-button + .author-button {
+  bottom: 60px; /* Move Author button above Publish */
 }

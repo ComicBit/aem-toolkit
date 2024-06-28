@@ -15,7 +15,7 @@
   }, 
   "content_scripts": [
     {
-      "matches": ["http://localhost:4502/*", "http://10.29.24.20:4502/*"],
+      "matches": ["http://localhost:4502/*", "http://10.29.24.20:4502/*", "http://localhost:4503/*" ],
       "js": ["content.js"],
       "css": ["style.css"]
     }
