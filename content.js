@@ -7,6 +7,7 @@ function addButtons() {
   console.log("Current URL:", currentURL);
 
   const editorRegex = /localhost:4502\/editor\.html\/|10.29.24.20:4502\/editor\.html\//;
+  const viewAsPublishedRegex = /localhost:4502|10\.29\.24\.20:4502\/?wcmmode=disabled/;
   const publishRegex = /localhost:4503\/content\/|10.29.24.20:4503\/content\//;
 
   if (editorRegex.test(currentURL)) {
@@ -52,6 +53,23 @@ function addButtons() {
 
     authorButton.addEventListener('click', () => {
       const newURL = currentURL.replace('localhost:4503', 'localhost:4502').replace('10.29.24.20:4503', '10.29.24.20:4502').replace('/content/', '/editor.html/content/');
+      window.open(newURL, '_blank');
+      console.log("New Author URL opened: " + newURL);
+    });
+
+    document.body.appendChild(authorButton);
+    console.log("Author button added to the page");
+  } else if (viewAsPublishedRegex.test(currentURL)) {
+    console.log("URL matches the publish regex");
+
+    // "Author" Button
+    const authorButton = document.createElement('button');
+    authorButton.innerText = 'Author';
+    authorButton.id = 'author-button';
+    authorButton.className = 'author-button';
+
+    authorButton.addEventListener('click', () => {
+      const newURL = currentURL.replace('localhost:4502', 'localhost:4502').replace('10.29.24.20:4502', '10.29.24.20:4502').replace('/content/', '/editor.html/content/'.replace('l?wcmmode=disabled', 'l'));
       window.open(newURL, '_blank');
       console.log("New Author URL opened: " + newURL);
     });
