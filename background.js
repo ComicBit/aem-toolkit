@@ -1,105 +1,79 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Extension installed');
+    initializeContextMenus();
+});
 
-  // Create parent context menu items
-  chrome.contextMenus.create({
-    id: "author",
-    title: "Author",
-    contexts: ["all"]
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.error(`Error creating 'Author' menu: ${chrome.runtime.lastError}`);
-    } else {
-      console.log("'Author' menu created successfully");
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.action === "updateMenus") {
+        initializeContextMenus();
     }
-  });
-
-  chrome.contextMenus.create({
-    id: "publish",
-    title: "Publish",
-    contexts: ["all"]
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.error(`Error creating 'Publish' menu: ${chrome.runtime.lastError}`);
-    } else {
-      console.log("'Publish' menu created successfully");
-    }
-  });
-
-  // Create child context menu items for Author
-  chrome.contextMenus.create({
-    id: "authorCrxde",
-    parentId: "author",
-    title: "CRXDE",
-    contexts: ["all"]
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.error(`Error creating 'Author CRXDE' menu: ${chrome.runtime.lastError}`);
-    } else {
-      console.log("'Author CRXDE' menu created successfully");
-    }
-  });
-
-  chrome.contextMenus.create({
-    id: "authorBundles",
-    parentId: "author",
-    title: "Bundles",
-    contexts: ["all"]
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.error(`Error creating 'Author Bundles' menu: ${chrome.runtime.lastError}`);
-    } else {
-      console.log("'Author Bundles' menu created successfully");
-    }
-  });
-
-  // Create child context menu items for Publish
-  chrome.contextMenus.create({
-    id: "publishCrxde",
-    parentId: "publish",
-    title: "CRXDE",
-    contexts: ["all"]
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.error(`Error creating 'Publish CRXDE' menu: ${chrome.runtime.lastError}`);
-    } else {
-      console.log("'Publish CRXDE' menu created successfully");
-    }
-  });
-
-  chrome.contextMenus.create({
-    id: "publishBundles",
-    parentId: "publish",
-    title: "Bundles",
-    contexts: ["all"]
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.error(`Error creating 'Publish Bundles' menu: ${chrome.runtime.lastError}`);
-    } else {
-      console.log("'Publish Bundles' menu created successfully");
-    }
-  });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  const authorCrxdeUrl = "http://localhost:4502/crx/de/index.jsp";
-  const authorBundlesUrl = "http://localhost:4502/system/console/bundles";
-  const publishCrxdeUrl = "http://localhost:4503/crx/de/index.jsp";
-  const publishBundlesUrl = "http://localhost:4503/system/console/bundles";
-
-  if (info.menuItemId === "authorCrxde") {
-    chrome.tabs.create({ url: authorCrxdeUrl });
-  } else if (info.menuItemId === "authorBundles") {
-    chrome.tabs.create({ url: authorBundlesUrl });
-  } else if (info.menuItemId === "publishCrxde") {
-    chrome.tabs.create({ url: publishCrxdeUrl });
-  } else if (info.menuItemId === "publishBundles") {
-    chrome.tabs.create({ url: publishBundlesUrl });
-  }
+    const [type, name, action] = info.menuItemId.split('-');
+    chrome.storage.sync.get([`${type}Instances`], function(data) {
+        const instance = data[`${type}Instances`].find(inst => inst.name === name);
+        if (instance) {
+            let url;
+            switch (action) {
+                case 'bundles':
+                    url = `${instance.url}:${instance.port}/system/console/bundles`;
+                    break;
+                case 'crx':
+                    url = `${instance.url}:${instance.port}/crx/de`;
+                    break;
+            }
+            if (url) {
+                chrome.tabs.create({ url });
+            }
+        }
+    });
 });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message === 'log') {
-    console.log(sender.tab.url, message);
-  }
-});
+function initializeContextMenus() {
+    chrome.contextMenus.removeAll(() => {
+        chrome.storage.sync.get(['authorInstances', 'publishInstances'], function(data) {
+            (data.authorInstances || []).forEach(instance => {
+                if (instance.name && instance.name.trim() !== '') {
+                    chrome.contextMenus.create({
+                        id: `author-${instance.name}`,
+                        title: instance.name,
+                        contexts: ["all"]
+                    });
+                    chrome.contextMenus.create({
+                        id: `author-${instance.name}-bundles`,
+                        title: 'Show Bundles',
+                        parentId: `author-${instance.name}`,
+                        contexts: ["all"]
+                    });
+                    chrome.contextMenus.create({
+                        id: `author-${instance.name}-crx`,
+                        title: 'Show CRX',
+                        parentId: `author-${instance.name}`,
+                        contexts: ["all"]
+                    });
+                }
+            });
+            (data.publishInstances || []).forEach(instance => {
+                if (instance.name && instance.name.trim() !== '') {
+                    chrome.contextMenus.create({
+                        id: `publish-${instance.name}`,
+                        title: instance.name,
+                        contexts: ["all"]
+                    });
+                    chrome.contextMenus.create({
+                        id: `publish-${instance.name}-bundles`,
+                        title: 'Show Bundles',
+                        parentId: `publish-${instance.name}`,
+                        contexts: ["all"]
+                    });
+                    chrome.contextMenus.create({
+                        id: `publish-${instance.name}-crx`,
+                        title: 'Show CRX',
+                        parentId: `publish-${instance.name}`,
+                        contexts: ["all"]
+                    });
+                }
+            });
+        });
+    });
+}

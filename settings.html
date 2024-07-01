@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Settings</h1>
+    <form id="settings-form">
+        <h2>Author Instances</h2>
+        <div id="author-instances"></div>
+        <button type="button" id="add-author-instance">Add Author Instance</button>
+
+        <h2>Publish Instances</h2>
+        <div id="publish-instances"></div>
+        <button type="button" id="add-publish-instance">Add Publish Instance</button>
+
+        <h2>Options</h2>
+        <div>
+            <label>
+                <input type="checkbox" id="open-new-tab" />
+                Open links in a new tab
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="enable-author-button" checked />
+                Enable Author button
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="enable-view-as-published-button" checked />
+                Enable View as Published button
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="enable-publish-button" checked />
+                Enable Publish button
+            </label>
+        </div>
+
+        <button type="submit">Save</button>
+    </form>
+    <script src="settings.js"></script>
+</body>
+</html>

@@ -1,29 +1,88 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 20px;
+    background-color: #f4f4f9;
+}
+
+h1 {
+    color: #333;
+}
+
+h2 {
+    color: #555;
+}
+
+form {
+    margin-top: 20px;
+}
+
+.instance {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="number"] {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+button.remove-instance {
+    background-color: #dc3545;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
 .switch-mode-button, .publish-button, .author-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-bottom: 10px; /* Added margin to separate buttons */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px; /* Added margin to separate buttons */
 }
 
 .publish-button {
-  background-color: #28a745; /* Green for Publish button */
+    background-color: #28a745; /* Green for Publish button */
 }
 
 .author-button {
-  background-color: #ffc107; /* Yellow for Author button */
+    background-color: #ffc107; /* Yellow for Author button */
 }
 
 .switch-mode-button + .publish-button {
-  bottom: 60px; /* Move Publish button above View as Published */
+    bottom: 60px; /* Move Publish button above View as Published */
 }
 
 .publish-button + .author-button {
-  bottom: 60px; /* Move Author button above Publish */
+    bottom: 100px; /* Move Author button above Publish */
 }
