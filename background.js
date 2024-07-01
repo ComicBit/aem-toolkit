@@ -1,8 +1,25 @@
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
+    if (details.reason === 'install') {
+        // Set default instances on first install
+        chrome.storage.sync.set({
+            authorInstances: [
+                { name: 'Author', url: 'http://localhost', port: 4502 }
+            ],
+            publishInstances: [
+                { name: 'Publish', url: 'http://localhost', port: 4503 }
+            ],
+            openNewTab: false,
+            enableAuthorButton: true,
+            enableViewAsPublishedButton: true,
+            enablePublishButton: true
+        }, () => {
+            console.log('Default settings have been set.');
+        });
+    }
     initializeContextMenus();
 });
 
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "updateMenus") {
         initializeContextMenus();
     }
@@ -41,13 +58,13 @@ function initializeContextMenus() {
                     });
                     chrome.contextMenus.create({
                         id: `author-${instance.name}-bundles`,
-                        title: 'Show Bundles',
+                        title: 'Bundles',
                         parentId: `author-${instance.name}`,
                         contexts: ["all"]
                     });
                     chrome.contextMenus.create({
                         id: `author-${instance.name}-crx`,
-                        title: 'Show CRX',
+                        title: 'CRXDE',
                         parentId: `author-${instance.name}`,
                         contexts: ["all"]
                     });
@@ -62,13 +79,13 @@ function initializeContextMenus() {
                     });
                     chrome.contextMenus.create({
                         id: `publish-${instance.name}-bundles`,
-                        title: 'Show Bundles',
+                        title: 'Bundles',
                         parentId: `publish-${instance.name}`,
                         contexts: ["all"]
                     });
                     chrome.contextMenus.create({
                         id: `publish-${instance.name}-crx`,
-                        title: 'Show CRX',
+                        title: 'CRXDE',
                         parentId: `publish-${instance.name}`,
                         contexts: ["all"]
                     });
