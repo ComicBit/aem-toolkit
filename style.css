@@ -9,12 +9,12 @@ h1 {
     color: #333;
 }
 
-h2 {
-    color: #555;
-}
-
 form {
     margin-top: 20px;
+}
+
+.instance-group {
+    margin-bottom: 20px;
 }
 
 .instance {
@@ -57,32 +57,47 @@ button:hover {
     opacity: 0.9;
 }
 
-.switch-mode-button, .publish-button, .author-button {
+.switch-mode-button, .publish-button, .author-button, .edit-button {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 1000;
     padding: 10px 20px;
-    background-color: #007bff;
     color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin-bottom: 10px; /* Added margin to separate buttons */
+    margin-bottom: 10px;
+}
+
+.switch-mode-button {
+    background-color: #007bff;
 }
 
 .publish-button {
-    background-color: #28a745; /* Green for Publish button */
+    background-color: #28a745;
 }
 
 .author-button {
-    background-color: #ffc107; /* Yellow for Author button */
+    background-color: #ffc107;
 }
 
-.switch-mode-button + .publish-button {
-    bottom: 60px; /* Move Publish button above View as Published */
+.edit-button {
+    background-color: #17a2b8;
 }
 
-.publish-button + .author-button {
-    bottom: 100px; /* Move Author button above Publish */
+.switch-mode-button {
+    bottom: 20px;
+}
+
+.publish-button {
+    bottom: 70px;
+}
+
+.author-button {
+    bottom: 120px;
+}
+
+.edit-button {
+    bottom: 170px;
 }

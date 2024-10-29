@@ -1,17 +1,17 @@
+// background.js
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
-        // Set default instances on first install
         chrome.storage.sync.set({
-            authorInstances: [
-                { name: 'Author', url: 'http://localhost', port: 4502 }
-            ],
-            publishInstances: [
-                { name: 'Publish', url: 'http://localhost', port: 4503 }
-            ],
+            instances: [{
+                name: 'Default Instance',
+                author: { url: 'http://localhost', port: '4502' },
+                publish: { url: 'http://localhost', port: '4503' }
+            }],
             openNewTab: false,
             enableAuthorButton: true,
             enableViewAsPublishedButton: true,
-            enablePublishButton: true
+            enablePublishButton: true,
+            enableEditButton: true
         }, () => {
             console.log('Default settings have been set.');
         });
@@ -26,67 +26,87 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-    const [type, name, action] = info.menuItemId.split('-');
-    chrome.storage.sync.get([`${type}Instances`], function(data) {
-        const instance = data[`${type}Instances`].find(inst => inst.name === name);
+    const parts = info.menuItemId.split('-');
+    if (parts.length < 3) {
+        // This is likely a parent menu item, so skip it
+        console.warn(`Clicked a parent menu item with id: ${info.menuItemId}`);
+        return;
+    }
+
+    const index = parts[1];
+    const action = parts.slice(2).join('-'); // Handles actions with hyphens
+
+    if (!['author-bundles', 'author-crx', 'publish-bundles', 'publish-crx'].includes(action)) {
+        console.error(`Unknown or undefined action: ${action}`);
+        return;
+    }
+
+    chrome.storage.sync.get(['instances'], function(data) {
+        const instance = data.instances[index];
         if (instance) {
             let url;
             switch (action) {
-                case 'bundles':
-                    url = `${instance.url}:${instance.port}/system/console/bundles`;
+                case 'author-bundles':
+                    url = `${instance.author.url}${instance.author.port ? ':' + instance.author.port : ''}/system/console/bundles`;
                     break;
-                case 'crx':
-                    url = `${instance.url}:${instance.port}/crx/de`;
+                case 'author-crx':
+                    url = `${instance.author.url}${instance.author.port ? ':' + instance.author.port : ''}/crx/de`;
                     break;
+                case 'publish-bundles':
+                    url = `${instance.publish.url}${instance.publish.port ? ':' + instance.publish.port : ''}/system/console/bundles`;
+                    break;
+                case 'publish-crx':
+                    url = `${instance.publish.url}${instance.publish.port ? ':' + instance.publish.port : ''}/crx/de`;
+                    break;
+                default:
+                    console.error(`Unhandled action: ${action}`);
+                    return;
             }
             if (url) {
-                chrome.tabs.create({ url });
+                chrome.tabs.create({ url }, () => {
+                    console.log(`Opened URL: ${url}`);
+                });
             }
+        } else {
+            console.error(`Instance not found for index: ${index}`);
         }
     });
 });
 
 function initializeContextMenus() {
     chrome.contextMenus.removeAll(() => {
-        chrome.storage.sync.get(['authorInstances', 'publishInstances'], function(data) {
-            (data.authorInstances || []).forEach(instance => {
+        chrome.storage.sync.get(['instances'], function(data) {
+            (data.instances || []).forEach((instance, index) => {
                 if (instance.name && instance.name.trim() !== '') {
+                    // Parent menu (no action)
                     chrome.contextMenus.create({
-                        id: `author-${instance.name}`,
+                        id: `instance-${index}`,
                         title: instance.name,
                         contexts: ["all"]
                     });
+                    // Submenu items with actions
                     chrome.contextMenus.create({
-                        id: `author-${instance.name}-bundles`,
-                        title: 'Bundles',
-                        parentId: `author-${instance.name}`,
+                        id: `instance-${index}-author-bundles`,
+                        title: 'Author Bundles',
+                        parentId: `instance-${index}`,
                         contexts: ["all"]
                     });
                     chrome.contextMenus.create({
-                        id: `author-${instance.name}-crx`,
-                        title: 'CRXDE',
-                        parentId: `author-${instance.name}`,
-                        contexts: ["all"]
-                    });
-                }
-            });
-            (data.publishInstances || []).forEach(instance => {
-                if (instance.name && instance.name.trim() !== '') {
-                    chrome.contextMenus.create({
-                        id: `publish-${instance.name}`,
-                        title: instance.name,
+                        id: `instance-${index}-author-crx`,
+                        title: 'Author CRXDE',
+                        parentId: `instance-${index}`,
                         contexts: ["all"]
                     });
                     chrome.contextMenus.create({
-                        id: `publish-${instance.name}-bundles`,
-                        title: 'Bundles',
-                        parentId: `publish-${instance.name}`,
+                        id: `instance-${index}-publish-bundles`,
+                        title: 'Publish Bundles',
+                        parentId: `instance-${index}`,
                         contexts: ["all"]
                     });
                     chrome.contextMenus.create({
-                        id: `publish-${instance.name}-crx`,
-                        title: 'CRXDE',
-                        parentId: `publish-${instance.name}`,
+                        id: `instance-${index}-publish-crx`,
+                        title: 'Publish CRXDE',
+                        parentId: `instance-${index}`,
                         contexts: ["all"]
                     });
                 }
