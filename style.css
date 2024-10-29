@@ -67,7 +67,7 @@ button:hover {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin-bottom: 10px;
+    margin-bottom: 10px !important;
 }
 
 .switch-mode-button {
@@ -95,9 +95,9 @@ button:hover {
 }
 
 .author-button {
-    bottom: 120px;
+    bottom: 20px;
 }
 
 .edit-button {
-    bottom: 170px;
+    bottom: 20px;
 }

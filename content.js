@@ -1,29 +1,43 @@
-// Function to get origin, handling default ports
-function getOrigin(url, port) {
+// Function to get host and port, ignoring protocol
+function getHostAndPort(url, port) {
     try {
         const urlObj = new URL(url);
-        if (port) {
-            if (port !== '80' && port !== '443') {
-                urlObj.port = port;
-            } else {
-                urlObj.port = ''; // Use default port
-            }
-        }
-        return urlObj.origin;
+        const hostname = urlObj.hostname;
+        // Use the provided port if specified; otherwise, leave it undefined
+        const portNumber = port || null;
+        return { hostname, port: portNumber };
     } catch (e) {
-        console.error(`Invalid URL in getOrigin: ${url}, Error: ${e.message}`);
+        console.error(`Invalid URL in getHostAndPort: ${url}, Error: ${e.message}`);
         return null;
     }
 }
 
 function urlsMatch(instanceUrl, instancePort, currentUrl) {
-    const instanceOrigin = getOrigin(instanceUrl, instancePort);
-    const currentOrigin = new URL(currentUrl).origin;
-    if (!instanceOrigin) {
+    const instanceHostPort = getHostAndPort(instanceUrl, instancePort);
+    const currentUrlObj = new URL(currentUrl);
+    const currentHostPort = {
+        hostname: currentUrlObj.hostname,
+        port: currentUrlObj.port || null
+    };
+    if (!instanceHostPort) {
         return false;
     }
-    console.log(`Comparing instanceOrigin: ${instanceOrigin} with currentOrigin: ${currentOrigin}`);
-    return instanceOrigin === currentOrigin;
+    console.log(`Comparing instanceHost: ${instanceHostPort.hostname}, instancePort: ${instanceHostPort.port} with currentHost: ${currentHostPort.hostname}, currentPort: ${currentHostPort.port}`);
+
+    // Compare hostnames
+    if (instanceHostPort.hostname !== currentHostPort.hostname) {
+        return false;
+    }
+
+    // If instance port is specified, compare ports
+    if (instanceHostPort.port) {
+        const instancePort = instanceHostPort.port;
+        const currentPort = currentHostPort.port || (currentUrlObj.protocol === 'https:' ? '443' : '80');
+        return instancePort === currentPort;
+    }
+
+    // If instance port is not specified, match regardless of port
+    return true;
 }
 
 // Function to get 'wcmmode' parameter from URL
@@ -42,6 +56,8 @@ chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enabl
 
     function addButtons() {
         const currentURL = window.location.href;
+        const currentUrlObj = new URL(currentURL);
+        const currentProtocol = currentUrlObj.protocol;
 
         // Find the matching instance based on the current URL
         const matchedInstance = instances.find(instance => {
@@ -122,11 +138,14 @@ chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enabl
             publishButton.className = 'publish-button';
 
             publishButton.addEventListener('click', () => {
-                const authorOrigin = getOrigin(matchedInstance.author.url, matchedInstance.author.port);
-                const publishOrigin = getOrigin(matchedInstance.publish.url, matchedInstance.publish.port);
-                const currentOrigin = new URL(currentURL).origin;
+                const publishHostPort = getHostAndPort(matchedInstance.publish.url, matchedInstance.publish.port);
 
-                let newURL = currentURL.replace(currentOrigin, publishOrigin).replace('/editor.html/', '/');
+                let newOrigin = `${currentProtocol}//${publishHostPort.hostname}`;
+                if (publishHostPort.port && publishHostPort.port !== '80' && publishHostPort.port !== '443') {
+                    newOrigin += `:${publishHostPort.port}`;
+                }
+
+                let newURL = currentURL.replace(currentUrlObj.origin, newOrigin).replace('/editor.html/', '/');
 
                 openNewTab ? window.open(newURL, '_blank') : window.location.href = newURL;
                 console.log("New Publish URL opened: " + newURL);
@@ -137,19 +156,21 @@ chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enabl
         }
 
         // Add "Author" button (only on publish site)
-        const currentOrigin = new URL(currentURL).origin;
-        const publishOrigin = getOrigin(matchedInstance.publish.url, matchedInstance.publish.port);
-
-        if (enableAuthorButton && currentOrigin === publishOrigin) {
+        if (enableAuthorButton && urlsMatch(matchedInstance.publish.url, matchedInstance.publish.port, currentURL)) {
             const authorButton = document.createElement('button');
             authorButton.innerText = 'Go to Author';
             authorButton.id = 'author-button';
             authorButton.className = 'author-button';
 
             authorButton.addEventListener('click', () => {
-                const authorOrigin = getOrigin(matchedInstance.author.url, matchedInstance.author.port);
+                const authorHostPort = getHostAndPort(matchedInstance.author.url, matchedInstance.author.port);
 
-                let newURL = currentURL.replace(publishOrigin, authorOrigin);
+                let newOrigin = `${currentProtocol}//${authorHostPort.hostname}`;
+                if (authorHostPort.port && authorHostPort.port !== '80' && authorHostPort.port !== '443') {
+                    newOrigin += `:${authorHostPort.port}`;
+                }
+
+                let newURL = currentURL.replace(currentUrlObj.origin, newOrigin);
 
                 // Insert '/editor.html' before '/content/'
                 newURL = newURL.replace('/content/', '/editor.html/content/');
