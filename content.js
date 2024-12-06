@@ -1,10 +1,13 @@
-// Function to get host and port, ignoring protocol
+// content.js
+
 function getHostAndPort(url, port) {
+    if (!url) {
+        return null;
+    }
     try {
         const urlObj = new URL(url);
         const hostname = urlObj.hostname;
-        // Use the provided port if specified; otherwise, leave it undefined
-        const portNumber = port || null;
+        const portNumber = port || (urlObj.port ? urlObj.port : null);
         return { hostname, port: portNumber };
     } catch (e) {
         console.error(`Invalid URL in getHostAndPort: ${url}, Error: ${e.message}`);
@@ -14,39 +17,47 @@ function getHostAndPort(url, port) {
 
 function urlsMatch(instanceUrl, instancePort, currentUrl) {
     const instanceHostPort = getHostAndPort(instanceUrl, instancePort);
-    const currentUrlObj = new URL(currentUrl);
+    if (!instanceHostPort) return false;
+
+    let currentUrlObj;
+    try {
+        currentUrlObj = new URL(currentUrl);
+    } catch (e) {
+        console.error(`Invalid currentUrl in urlsMatch: ${currentUrl}, Error: ${e.message}`);
+        return false;
+    }
+
     const currentHostPort = {
         hostname: currentUrlObj.hostname,
         port: currentUrlObj.port || null
     };
-    if (!instanceHostPort) {
-        return false;
-    }
-    console.log(`Comparing instanceHost: ${instanceHostPort.hostname}, instancePort: ${instanceHostPort.port} with currentHost: ${currentHostPort.hostname}, currentPort: ${currentHostPort.port}`);
 
-    // Compare hostnames
     if (instanceHostPort.hostname !== currentHostPort.hostname) {
         return false;
     }
 
-    // If instance port is specified, compare ports
     if (instanceHostPort.port) {
-        const instancePort = instanceHostPort.port;
-        const currentPort = currentHostPort.port || (currentUrlObj.protocol === 'https:' ? '443' : '80');
-        return instancePort === currentPort;
+        const instanceP = instanceHostPort.port;
+        const currentP = currentHostPort.port || (currentUrlObj.protocol === 'https:' ? '443' : '80');
+        return instanceP === currentP;
     }
 
-    // If instance port is not specified, match regardless of port
     return true;
 }
 
-// Function to get 'wcmmode' parameter from URL
 function getWcmModeFromUrl(url) {
     const urlObj = new URL(url);
     return urlObj.searchParams.get('wcmmode');
 }
 
-chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enableViewAsPublishedButton', 'enablePublishButton', 'enableEditButton'], (data) => {
+chrome.storage.sync.get([
+    'instances', 
+    'openNewTab', 
+    'enableAuthorButton', 
+    'enableViewAsPublishedButton', 
+    'enablePublishButton',
+    'enableEditButton'
+], (data) => {
     const instances = data.instances || [];
     const openNewTab = data.openNewTab || false;
     const enableAuthorButton = data.enableAuthorButton !== false;
@@ -54,24 +65,39 @@ chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enabl
     const enablePublishButton = data.enablePublishButton !== false;
     const enableEditButton = data.enableEditButton !== false;
 
+    function findMatchedInstance(currentURL) {
+        for (const instance of instances) {
+            if (instance.author && Array.isArray(instance.author)) {
+                if (instance.author.some(a => urlsMatch(a.url, a.port, currentURL))) {
+                    return { instance, type: 'author' };
+                }
+            }
+            if (instance.publish && Array.isArray(instance.publish)) {
+                if (instance.publish.some(p => urlsMatch(p.url, p.port, currentURL))) {
+                    return { instance, type: 'publish' };
+                }
+            }
+        }
+        return null;
+    }
+
     function addButtons() {
         const currentURL = window.location.href;
         const currentUrlObj = new URL(currentURL);
         const currentProtocol = currentUrlObj.protocol;
 
-        // Find the matching instance based on the current URL
-        const matchedInstance = instances.find(instance => {
-            return urlsMatch(instance.author.url, instance.author.port, currentURL) ||
-                   urlsMatch(instance.publish.url, instance.publish.port, currentURL);
-        });
-
-        if (!matchedInstance) {
+        const matched = findMatchedInstance(currentURL);
+        if (!matched) {
             console.log("No matching instance found for the current URL");
             return;
         }
 
-        // Add "Edit" button when in 'View as Published' mode on author site
-        if (enableEditButton && urlsMatch(matchedInstance.author.url, matchedInstance.author.port, currentURL) && !currentURL.includes('/editor.html/') && getWcmModeFromUrl(currentURL) === 'disabled') {
+        const { instance, type } = matched;
+        
+        const primaryAuthor = instance.author && instance.author.length > 0 ? instance.author[0] : null;
+        const primaryPublish = instance.publish && instance.publish.length > 0 ? instance.publish[0] : null;
+
+        if (enableEditButton && type === 'author' && !currentURL.includes('/editor.html/') && getWcmModeFromUrl(currentURL) === 'disabled') {
             const editButton = document.createElement('button');
             editButton.innerText = 'Go to Edit';
             editButton.id = 'edit-button';
@@ -79,20 +105,12 @@ chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enabl
 
             editButton.addEventListener('click', () => {
                 const urlObj = new URL(currentURL);
-
-                // Remove 'wcmmode' parameter
                 urlObj.searchParams.delete('wcmmode');
-
-                // Insert '/editor.html' before '/content/' if not already present
                 if (!urlObj.pathname.includes('/editor.html/')) {
                     urlObj.pathname = urlObj.pathname.replace('/content/', '/editor.html/content/');
                 }
-
-                // Set 'wcmmode' to 'edit'
                 urlObj.searchParams.set('wcmmode', 'edit');
-
                 const newURL = urlObj.toString();
-
                 openNewTab ? window.open(newURL, '_blank') : window.location.href = newURL;
                 console.log("Switched to Edit mode: " + newURL);
             });
@@ -101,7 +119,6 @@ chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enabl
             console.log("Edit button added to the page");
         }
 
-        // Add "View as Published" button
         if (enableViewAsPublishedButton && currentURL.includes('/editor.html/')) {
             const viewAsPublishedButton = document.createElement('button');
             viewAsPublishedButton.innerText = 'View as Published';
@@ -110,82 +127,63 @@ chrome.storage.sync.get(['instances', 'openNewTab', 'enableAuthorButton', 'enabl
 
             viewAsPublishedButton.addEventListener('click', () => {
                 const urlObj = new URL(currentURL);
-
-                // Remove '/editor.html/' from the pathname
                 urlObj.pathname = urlObj.pathname.replace('/editor.html/', '/');
-
-                // Remove any existing 'wcmmode' parameter
                 urlObj.searchParams.delete('wcmmode');
-
-                // Set 'wcmmode' to 'disabled'
                 urlObj.searchParams.set('wcmmode', 'disabled');
-
                 const newURL = urlObj.toString();
-
                 openNewTab ? window.open(newURL, '_blank') : window.location.href = newURL;
                 console.log("New URL opened: " + newURL);
             });
 
             document.body.appendChild(viewAsPublishedButton);
-            console.log("View as Published button added to the page");
+            console.log("View as Published button added");
         }
 
-        // Add "Publish" button
-        if (enablePublishButton && currentURL.includes('/editor.html/')) {
+        if (enablePublishButton && currentURL.includes('/editor.html/') && primaryPublish) {
             const publishButton = document.createElement('button');
             publishButton.innerText = 'Go to Publish';
             publishButton.id = 'publish-button';
             publishButton.className = 'publish-button';
 
             publishButton.addEventListener('click', () => {
-                const publishHostPort = getHostAndPort(matchedInstance.publish.url, matchedInstance.publish.port);
-
+                const publishHostPort = getHostAndPort(primaryPublish.url, primaryPublish.port);
                 let newOrigin = `${currentProtocol}//${publishHostPort.hostname}`;
                 if (publishHostPort.port && publishHostPort.port !== '80' && publishHostPort.port !== '443') {
                     newOrigin += `:${publishHostPort.port}`;
                 }
 
                 let newURL = currentURL.replace(currentUrlObj.origin, newOrigin).replace('/editor.html/', '/');
-
                 openNewTab ? window.open(newURL, '_blank') : window.location.href = newURL;
                 console.log("New Publish URL opened: " + newURL);
             });
 
             document.body.appendChild(publishButton);
-            console.log("Publish button added to the page");
+            console.log("Publish button added");
         }
 
-        // Add "Author" button (only on publish site)
-        if (enableAuthorButton && urlsMatch(matchedInstance.publish.url, matchedInstance.publish.port, currentURL)) {
+        if (enableAuthorButton && type === 'publish' && primaryAuthor) {
             const authorButton = document.createElement('button');
             authorButton.innerText = 'Go to Author';
             authorButton.id = 'author-button';
             authorButton.className = 'author-button';
 
             authorButton.addEventListener('click', () => {
-                const authorHostPort = getHostAndPort(matchedInstance.author.url, matchedInstance.author.port);
-
+                const authorHostPort = getHostAndPort(primaryAuthor.url, primaryAuthor.port);
                 let newOrigin = `${currentProtocol}//${authorHostPort.hostname}`;
                 if (authorHostPort.port && authorHostPort.port !== '80' && authorHostPort.port !== '443') {
                     newOrigin += `:${authorHostPort.port}`;
                 }
 
                 let newURL = currentURL.replace(currentUrlObj.origin, newOrigin);
-
-                // Insert '/editor.html' before '/content/'
                 newURL = newURL.replace('/content/', '/editor.html/content/');
-
-                // Remove any existing 'wcmmode' parameter
                 newURL = newURL.replace(/(\?|&)wcmmode=[^&]*/, '');
-                // Append 'wcmmode=edit'
                 newURL += (newURL.includes('?') ? '&' : '?') + 'wcmmode=edit';
-
                 openNewTab ? window.open(newURL, '_blank') : window.location.href = newURL;
                 console.log("Navigated to Author: " + newURL);
             });
 
             document.body.appendChild(authorButton);
-            console.log("Author button added to the page");
+            console.log("Author button added");
         }
     }
 

@@ -1,103 +1,381 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+    margin: 0;
     padding: 20px;
-    background-color: #f4f4f9;
+    background: #222;
+    color: #f0f0f0;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.3s, color 0.3s;
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
 }
 
+body.light-mode {
+    background: #f8f8f8;
+    color: #222;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: currentColor;
+    transition: transform 0.2s;
+    z-index: 999;
+}
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* Sections */
+.section {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3),
+                inset -2px -2px 5px rgba(255,255,255,0.02);
+    position: relative;
+    transition: background 0.3s;
+}
+body.light-mode .section {
+    background: #fff;
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05),
+                inset -2px -2px 5px rgba(255,255,255,0.7);
+}
+
+/* Headings and Paragraph */
+h1, h2 {
+    margin: 0;
+    font-weight: 500;
+}
 h1 {
+    font-size: 24px;
+    margin-bottom: 30px;
+}
+h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+    color: #ddd;
+}
+body.light-mode p {
     color: #333;
 }
 
-form {
-    margin-top: 20px;
-}
-
-.instance-group {
-    margin-bottom: 20px;
-}
-
-.instance {
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #fff;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
+/* Inputs */
 input[type="text"], input[type="number"] {
-    width: calc(100% - 20px);
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
+    background: #333;
+    border: 1px solid #444;
+    color: #f0f0f0;
+    padding: 5px 10px;
     border-radius: 4px;
+    font-size: 14px;
+    width: calc(100% - 24px);
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+}
+input[type="text"]:focus, input[type="number"]:focus {
+    border-color: #666;
+    outline: none;
+}
+body.light-mode input[type="text"], body.light-mode input[type="number"] {
+    background: #fafafa;
+    color: #222;
+    border: 1px solid #ccc;
 }
 
-button {
-    padding: 10px 15px;
+/* Instance Groups, Global Link Entries, URL Entries */
+.instance-group, .global-link-entry, .url-entry {
+    background: #2f2f2f;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    position: relative;
+    box-shadow:
+        5px 5px 10px rgba(0,0,0,0.5),
+        -5px -5px 10px rgba(255,255,255,0.02);
+    transition: background 0.2s, box-shadow 0.2s;
+    cursor: pointer; 
+}
+.instance-group:hover, .global-link-entry:hover, .url-entry:hover {
+    box-shadow:
+        2px 2px 5px rgba(0,0,0,0.6),
+        -2px -2px 5px rgba(255,255,255,0.05);
+}
+body.light-mode .instance-group, body.light-mode .global-link-entry, body.light-mode .url-entry {
+    background: #f0f0f0;
+    box-shadow:
+        2px 2px 5px rgba(0,0,0,0.1),
+        -2px -2px 5px rgba(255,255,255,0.9);
+    color: #222;
+}
+
+/* Instance Header */
+.instance-header {
+    display: flex;
+    align-items: center;
+    background: none;
+    margin-bottom: 10px;
+}
+.instance-title {
+    font-weight: 500;
+    flex: 1;
+    color: #fff;
+}
+body.light-mode .instance-title {
+    color: #222;
+}
+
+.drag-handle, .drag-handle-global {
+    user-select: none;
+    font-size: 16px;
+    margin-right: 10px;
+    cursor: move;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.drag-handle:hover, .drag-handle-global:hover {
+    opacity: 1;
+}
+
+.collapse-button {
+    background: none;
     border: none;
-    border-radius: 4px;
-    background-color: #007bff;
-    color: white;
+    color: #aaa;
+    font-size: 18px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s, transform 0.2s;
+}
+.collapse-button:hover {
+    color: #fff;
+    transform: scale(1.1);
+}
+
+/* Expand/Collapse Animation */
+.instance-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
+    border-top: 1px solid #444;
+    padding-top: 0;
+}
+.instance-group.expanded .instance-body {
+    max-height: 1000px;
+    padding-top: 10px;
+}
+body.light-mode .instance-body {
+    border-top: 1px solid #ccc;
+}
+
+/* Buttons inside instance/global link entries */
+.add-url-btn, .remove-url, .remove-instance, .remove-global-link {
+    background: none;
+    border: none;
+    font-size: 14px;
     cursor: pointer;
+    border-radius: 4px;
+    padding: 3px 8px;
+    transition: background 0.2s, transform 0.1s;
+    color: #f0f0f0;
+}
+.add-url-btn {
+    color: #4CAF50;
+}
+.add-url-btn:hover {
+    background: rgba(76,175,80,0.2);
+    transform: scale(1.05);
+}
+.remove-url, .remove-instance, .remove-global-link {
+    color: #ff6666;
+}
+.remove-url:hover, .remove-instance:hover, .remove-global-link:hover {
+    background: rgba(255,0,0,0.2);
+    transform: scale(1.05);
+}
+
+/* Fancy 3D Buttons */
+.fancy-button {
+    background: #2f2f2f;
+    color: #f0f0f0;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    box-shadow:
+        5px 5px 10px rgba(0,0,0,0.5),
+        -5px -5px 10px rgba(255,255,255,0.02);
+    transition: all 0.2s ease-in-out;
     margin-right: 10px;
 }
-
-button.remove-instance {
-    background-color: #dc3545;
+.fancy-button:hover {
+    box-shadow:
+        2px 2px 5px rgba(0,0,0,0.6),
+        -2px -2px 5px rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+}
+.fancy-button:active {
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5),
+                inset -2px -2px 5px rgba(255,255,255,0.02);
+    transform: translateY(2px);
 }
 
-button:hover {
-    opacity: 0.9;
+/* Keep colors in light mode too */
+body.light-mode .fancy-button {
+    background: #e3e3e3;
+    color: #333;
+    box-shadow:
+        3px 3px 6px rgba(0,0,0,0.1),
+        -3px -3px 6px rgba(255,255,255,0.7);
+}
+body.light-mode .fancy-button:hover {
+    box-shadow:
+        2px 2px 4px rgba(0,0,0,0.2),
+        -2px -2px 4px rgba(255,255,255,0.8);
 }
 
-.switch-mode-button, .publish-button, .author-button, .edit-button {
+.primary-button {
+    background: linear-gradient(145deg, #1f6feb, #4c8dff);
+}
+body.light-mode .primary-button {
+    background: linear-gradient(145deg, #2196F3, #64B5F6);
+}
+
+.accent-button {
+    background: linear-gradient(145deg, #e91e63, #ff4081);
+}
+body.light-mode .accent-button {
+    background: linear-gradient(145deg, #EC407A, #FF80AB);
+}
+
+/* Visibility Checkboxes */
+.visibility-checkboxes {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+.visibility-checkboxes label {
+    color: #aaa;
+    font-size: 13px;
+    margin-right: 5px;
+}
+.author-check, .publish-check {
+    transform: scale(1.2);
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: #4CAF50;
+}
+
+/* In-Page Buttons: now bottom right */
+.edit-button, .switch-mode-button, .publish-button, .author-button {
     position: fixed;
-    bottom: 20px;
     right: 20px;
-    z-index: 1000;
-    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
     color: #fff;
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-bottom: 10px !important;
+    border-radius: 20px;
+    padding: 6px 12px;
+    z-index: 9999; 
+    box-shadow:
+        5px 5px 10px rgba(0,0,0,0.5),
+        -5px -5px 10px rgba(255,255,255,0.02);
+    transition: all 0.2s ease-in-out;
 }
 
-.switch-mode-button {
-    background-color: #007bff;
-}
-
-.publish-button {
-    background-color: #28a745;
-}
-
-.author-button {
-    background-color: #ffc107;
-}
-
+/* Place them at the bottom right, stacking upwards */
 .edit-button {
-    background-color: #17a2b8;
+    background: linear-gradient(145deg, #6a1b9a, #8e24aa);
+    bottom: 20px;
 }
-
 .switch-mode-button {
-    bottom: 20px;
+    background: linear-gradient(145deg, #1f6feb, #4c8dff);
+    bottom: 60px;
 }
-
 .publish-button {
-    bottom: 70px;
+    background: linear-gradient(145deg, #388e3c, #4caf50);
+    bottom: 100px;
 }
-
 .author-button {
-    bottom: 20px;
+    background: linear-gradient(145deg, #f57c00, #ffa726);
+    bottom: 140px;
 }
 
-.edit-button {
-    bottom: 20px;
+body.light-mode .edit-button {
+    background: linear-gradient(145deg, #9c27b0, #ba68c8);
+}
+body.light-mode .switch-mode-button {
+    background: linear-gradient(145deg, #2196F3, #64B5F6);
+}
+body.light-mode .publish-button {
+    background: linear-gradient(145deg, #4CAF50, #81C784);
+}
+body.light-mode .author-button {
+    background: linear-gradient(145deg, #FFA726, #FFB74D);
+}
+
+.edit-button:hover, .switch-mode-button:hover, .publish-button:hover, .author-button:hover {
+    box-shadow:
+        2px 2px 5px rgba(0,0,0,0.6),
+        -2px -2px 5px rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+}
+.edit-button:active, .switch-mode-button:active, .publish-button:active, .author-button:active {
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5),
+                inset -2px -2px 5px rgba(255,255,255,0.02);
+    transform: translateY(2px);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: #2f2f2f;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow:
+        5px 5px 10px rgba(0,0,0,0.5),
+        -5px -5px 10px rgba(255,255,255,0.02);
+}
+.modal-content p {
+    margin-bottom: 20px;
+    color: #f0f0f0;
+}
+.modal-buttons button {
+    margin: 0 10px;
+}
+body.light-mode .modal-content {
+    background: #fff;
+    color: #222;
+    box-shadow:
+        2px 2px 5px rgba(0,0,0,0.1),
+        -2px -2px 5px rgba(255,255,255,0.8);
 }
