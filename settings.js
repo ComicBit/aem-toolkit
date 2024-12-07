@@ -259,7 +259,13 @@ document.addEventListener('DOMContentLoaded', function () {
         chrome.storage.sync.set({ instances, globalMenuItems }, () => {
             console.log('Settings saved');
             chrome.runtime.sendMessage({ action: "updateMenus" });
-            alert('Settings saved successfully! 🎉');
+            const savePopup = document.getElementById('save-popup');
+            savePopup.classList.add('show');
+            // Hide after 3 seconds
+            setTimeout(() => {
+                savePopup.classList.remove('show');
+                // Optional: add 'hide' class if needed for animation
+            }, 3000);
         });
     });
 
