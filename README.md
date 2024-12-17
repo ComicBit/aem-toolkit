@@ -1,56 +1,132 @@
+
 # AEM Toolkit
 
-AEM Toolkit is a Chrome extension designed to streamline your Adobe Experience Manager (AEM) development and content management processes. With this extension, you can easily switch between author and publish instances, view content as published, and manage OSGi bundles directly from your browser.
+**AEM Toolkit** is a Chrome extension designed to streamline your Adobe Experience Manager (AEM) development and content management tasks. It simplifies navigation between author and publish instances, enhances your workflow with in-page controls, and provides quick access to essential AEM tools like OSGi bundles and CRXDE.
+
+---
 
 ## Features
 
-- **Instance Management:** Easily switch between multiple author and publish instances.
-- **View as Published:** Quickly view the published version of your content from the author environment.
-- **Context Menus:** Access OSGi bundle management and CRXDE directly from context menus.
-- **Customizable Settings:** Configure default instances, enable/disable buttons, and set preferences for opening links in new tabs.
+### 1. **Instance Management**
+   - Configure multiple AEM instances, each with separate author and publish URLs.
+   - Switch seamlessly between environments for different projects.
+
+### 2. **Contextual View Switching**
+   - Quickly toggle between:
+     - **Edit Mode**: Opens the page in AEM Editor with `wcmmode=edit`.
+     - **View as Published**: Displays the published version of the content with `wcmmode=disabled`.
+
+### 3. **Integrated Context Menus**
+   - Right-click anywhere on the browser page to access a customized context menu.
+   - Navigate directly to OSGi bundles or CRXDE for both **author** and **publish** environments.
+   - Configurable options to show/hide these menu items for specific instances.
+
+### 4. **Custom Buttons on AEM Pages**
+   - Automatically injects buttons on AEM pages for quick navigation:
+     - **Go to Edit**: Opens the page in Edit Mode if currently in Published view.
+     - **View as Published**: Opens the published version from Edit Mode.
+     - **Go to Publish**: Redirects from the author to the publish instance.
+     - **Go to Author**: Redirects from the publish instance to the author.
+
+### 5. **Settings Page**
+   - Add or modify your instances directly from the extension’s settings page.
+   - Set default preferences for:
+     - URLs and ports for author and publish environments.
+     - Visibility of menu items and buttons.
+   - Configurations are saved in Chrome’s `sync` storage, enabling easy transfer between devices.
+
+---
 
 ## Installation
 
 1. Clone the repository:
-    ```sh
+    ```bash
     git clone https://github.com/yourusername/aem-toolkit.git
     ```
 
 2. Navigate to the project directory:
-    ```sh
+    ```bash
     cd aem-toolkit
     ```
 
 3. Load the extension in Chrome:
     - Open Chrome and go to `chrome://extensions/`
-    - Enable "Developer mode" (toggle switch in the top right corner)
-    - Click "Load unpacked" and select the project directory
+    - Enable "Developer mode" (toggle in the top-right corner).
+    - Click "Load unpacked" and select the project folder.
+
+---
 
 ## Usage
 
-1. Configure your instances:
-    - Go to the extension's options page by clicking the extension icon and selecting "Options"
-    - Add your author and publish instances
+### Configuring Instances
+1. Click the extension icon in Chrome and go to "Options."
+2. Add your AEM instances:
+   - Provide the name, author URL, and publish URL.
+   - Include port numbers if necessary (e.g., 4502 for author, 4503 for publish).
 
-2. Use the context menus:
-    - Right-click on any page to access the context menus for OSGi bundles and CRXDE
+### Switching Views
+- On any AEM page, the extension automatically injects action buttons:
+  - **Go to Edit**: Navigates to the page in Edit Mode.
+  - **View as Published**: Switches to the published version.
+  - **Go to Publish/Author**: Switch between environments.
 
-3. Switch views:
-    - Use the buttons injected into your AEM pages to switch between author and published views
+### Using Context Menus
+- Right-click on any page to access:
+  - Links to manage OSGi bundles.
+  - Quick access to CRXDE.
+
+---
+
+## Advanced Settings
+
+### Customize Buttons
+- Enable or disable in-page buttons (e.g., "Go to Edit").
+- Configure whether buttons open links in new tabs or the same tab.
+
+### Global Context Menus
+- Add or remove items from the right-click context menu for quick access to tools like OSGi bundles or CRXDE.
+
+---
+
+## Example Use Cases
+
+1. **Developers Testing on AEM**:
+   - Switch between edit and published views to ensure accuracy.
+   - Debug OSGi bundles directly from the browser.
+
+2. **Content Managers**:
+   - Quickly view published content without manually modifying URLs.
+
+3. **AEM Teams with Multiple Instances**:
+   - Manage environments for multiple projects or clients seamlessly.
+
+---
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Fork the repository.
+2. Create a new feature branch:
+    ```bash
+    git checkout -b feature/AmazingFeature
+    ```
+3. Commit your changes:
+    ```bash
+    git commit -m 'Add some AmazingFeature'
+    ```
+4. Push to the branch:
+    ```bash
+    git push origin feature/AmazingFeature
+    ```
+5. Open a Pull Request.
+
+---
 
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
+---
+
 ## Contact
 
-If you have any questions or suggestions, feel free to open an issue or contact us at [your contact email].
-
+For suggestions, issues, or questions, open an issue on GitHub or reach out via email at [your email/contact link].
