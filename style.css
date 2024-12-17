@@ -19,19 +19,19 @@
 
 .edit-button {
     background: linear-gradient(145deg, #6a1b9a, #8e24aa);
-    bottom: 20px;
+    bottom: 30px;
 }
 .switch-mode-button {
     background: linear-gradient(145deg, #1f6feb, #4c8dff);
-    bottom: 60px;
+    bottom: 30px;
 }
 .publish-button {
     background: linear-gradient(145deg, #388e3c, #4caf50);
-    bottom: 100px;
+    bottom: 70px;
 }
 .author-button {
     background: linear-gradient(145deg, #f57c00, #ffa726);
-    bottom: 140px;
+    bottom: 30px;
 }
 
 .edit-button:hover, .switch-mode-button:hover, .publish-button:hover, .author-button:hover {
