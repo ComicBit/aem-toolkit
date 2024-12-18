@@ -1,3 +1,4 @@
+// settings.js
 document.addEventListener('DOMContentLoaded', function () {
     const themeToggle = document.getElementById('theme-toggle');
     const instancesContainer = document.getElementById('instances-container');
@@ -10,10 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmationMessage = document.getElementById('confirmation-message');
     const confirmYes = document.getElementById('confirm-yes');
     const confirmNo = document.getElementById('confirm-no');
-
     let confirmCallback = null;
 
-    // Theme initialization
     if (localStorage.getItem('theme') === 'light') {
         document.body.classList.add('light-mode');
         themeToggle.textContent = '🌞';
@@ -32,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Show confirmation dialog
     function showConfirmDialog(message, callback) {
         confirmationMessage.textContent = message;
         confirmationModal.style.display = 'flex';
@@ -51,7 +49,6 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmCallback = null;
     });
 
-    // Load settings from storage
     chrome.storage.sync.get(['instances', 'globalMenuItems'], (data) => {
         const instances = data.instances || [];
         let globalMenuItems = data.globalMenuItems;
@@ -62,41 +59,41 @@ document.addEventListener('DOMContentLoaded', function () {
             ];
         }
 
-        // Load instances
-        instances.forEach(inst => {
-            addInstance(inst.name, inst.author, inst.publish);
+        instances.forEach((inst, idx) => {
+            addInstance(inst.name, inst.author, inst.publish, idx+1);
         });
 
-        // Load global menu items
         globalMenuItems.forEach(item => {
             addGlobalLinkEntry(item.name, item.path, item.showAuthor !== false, item.showPublish !== false);
         });
 
-        makeSortableInstances();
-        makeGlobalLinksSortable(globalLinksContainer);
+        enableCustomDnD(instancesContainer, '.instance-group');
+        enableCustomDnD(globalLinksContainer, '.global-link-entry');
+
+        document.querySelectorAll('.author-urls, .publish-urls').forEach(ulContainer => {
+            enableCustomDnD(ulContainer, '.url-entry');
+        });
     });
 
     addInstanceBtn.addEventListener('click', () => {
-        addInstance();
-        makeSortableInstances();
+        const index = document.querySelectorAll('.instance-group').length + 1;
+        addInstance('', [{url:'http://localhost', port:'4502', default:true}], [{url:'http://localhost', port:'4503'}], index);
+        enableCustomDnD(instancesContainer, '.instance-group');
     });
 
     addGlobalLinkBtn.addEventListener('click', () => {
         addGlobalLinkEntry('', '', true, true);
-        makeGlobalLinksSortable(globalLinksContainer);
+        enableCustomDnD(globalLinksContainer, '.global-link-entry');
     });
 
-    function addInstance(name = '', authorUrls = [{ url: 'http://localhost', port: '4502' }], publishUrls = [{ url: 'http://localhost', port: '4503' }]) {
-        const index = document.querySelectorAll('.instance-group').length + 1;
-
+    function addInstance(name = '', authorUrls = [{ url: 'http://localhost', port: '4502', default:true }], publishUrls = [{ url: 'http://localhost', port: '4503' }], index) {
         const container = document.createElement('div');
         container.classList.add('instance-group');
-        container.setAttribute('draggable', 'true');
         container.innerHTML = `
             <div class="instance-header">
                 <span class="drag-handle">⣿</span>
                 <span class="instance-title">${name ? name : 'New Instance'}</span>
-                <button type="button" class="collapse-button">+</button>
+                <button type="button" class="collapse-button"></button>
             </div>
             <div class="instance-body">
                 <label>Instance Name: <input type="text" name="instance-name-${index}" value="${name}" required></label>
@@ -111,23 +108,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button type="button" class="remove-instance">Remove Instance</button>
             </div>
         `;
-
         instancesContainer.appendChild(container);
 
         const authorContainer = container.querySelector('.author-urls');
-        authorUrls.forEach(a => addUrlEntry(authorContainer, a.url, a.port));
+        const publishContainer = container.querySelector('.publish-urls');
+
+        authorUrls.forEach((a) => addUrlEntry(authorContainer, a.url, a.port, a.default === true));
+        publishUrls.forEach((p) => addUrlEntry(publishContainer, p.url, p.port, p.default === true));
+
+        ensureDefaultRadio(authorContainer);
+        ensureDefaultRadio(publishContainer);
 
         container.querySelector('.add-author-url').addEventListener('click', (e) => {
             e.stopPropagation();
-            addUrlEntry(authorContainer, '', '');
+            addUrlEntry(authorContainer, '', '', false);
+            ensureDefaultRadio(authorContainer);
+            enableCustomDnD(authorContainer, '.url-entry');
         });
-
-        const publishContainer = container.querySelector('.publish-urls');
-        publishUrls.forEach(p => addUrlEntry(publishContainer, p.url, p.port));
 
         container.querySelector('.add-publish-url').addEventListener('click', (e) => {
             e.stopPropagation();
-            addUrlEntry(publishContainer, '', '');
+            addUrlEntry(publishContainer, '', '', false);
+            ensureDefaultRadio(publishContainer);
+            enableCustomDnD(publishContainer, '.url-entry');
         });
 
         const removeInstanceBtn = container.querySelector('.remove-instance');
@@ -137,12 +140,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (confirmed) container.remove();
             });
         });
+
+        const header = container.querySelector('.instance-header');
+        header.addEventListener('click', (e) => {
+            // Toggling will be handled by the threshold logic in DnD
+            // If no drag occurred, we treat as click
+        });
+
+        enableCustomDnD(authorContainer, '.url-entry');
+        enableCustomDnD(publishContainer, '.url-entry');
     }
 
-    function addUrlEntry(container, urlVal, portVal) {
+    function addUrlEntry(container, urlVal, portVal, isDefault = false) {
         const div = document.createElement('div');
         div.classList.add('url-entry');
         div.innerHTML = `
+            <span class="drag-handle-url">⋮</span>
             <input type="text" placeholder="http://example.com" value="${urlVal}">
             <input type="number" placeholder="Port" value="${portVal}">
             <button type="button" class="remove-url">✕</button>
@@ -151,23 +164,47 @@ document.addEventListener('DOMContentLoaded', function () {
         removeUrlBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             showConfirmDialog("Are you sure you want to remove this URL?", (confirmed) => {
-                if (confirmed) div.remove();
+                if (confirmed) {
+                    div.remove();
+                    ensureDefaultRadio(container);
+                }
             });
         });
         container.appendChild(div);
     }
 
+    function ensureDefaultRadio(container) {
+        const urlEntries = container.querySelectorAll('.url-entry');
+        urlEntries.forEach(entry => {
+            const existingRadio = entry.querySelector('input[type="radio"]');
+            if (existingRadio) existingRadio.parentNode.remove();
+        });
+
+        if (urlEntries.length > 1) {
+            urlEntries.forEach((entry, i) => {
+                const label = document.createElement('label');
+                label.style.cssText = "margin-left:10px; font-size:13px; color:#aaa;";
+                label.textContent = "Default ";
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'defaultUrlGroup-' + container.closest('.instance-group').querySelector('input[name^="instance-name"]').name;
+                if (i === 0) radio.checked = true;
+                label.appendChild(radio);
+                entry.insertBefore(label, entry.querySelector('.remove-url'));
+            });
+        }
+    }
+
     function addGlobalLinkEntry(nameVal, pathVal, showAuthor, showPublish) {
         const div = document.createElement('div');
         div.classList.add('global-link-entry');
-        div.setAttribute('draggable', 'true');
         div.innerHTML = `
             <span class="drag-handle-global">⠿</span>
             <input type="text" placeholder="Link Name" value="${nameVal}">
             <input type="text" placeholder="/path" value="${pathVal}">
             <div class="visibility-checkboxes">
-                <label>A <input type="checkbox" class="author-check" ${showAuthor ? 'checked' : ''}></label>
-                <label>P <input type="checkbox" class="publish-check" ${showPublish ? 'checked' : ''}></label>
+                <label><input type="checkbox" class="author-check" ${showAuthor ? 'checked' : ''}>Author</label>
+                <label><input type="checkbox" class="publish-check" ${showPublish ? 'checked' : ''}>Publish</label>
             </div>
             <button type="button" class="remove-global-link">✕</button>
         `;
@@ -186,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const instances = [];
         let isValid = true;
 
-        document.querySelectorAll('.instance-group').forEach(div => {
+        document.querySelectorAll('.instance-group').forEach((div) => {
             const nameInput = div.querySelector('input[name^="instance-name"]');
             const name = (nameInput.value || '').trim();
             if (!name) {
@@ -197,14 +234,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const authorEntries = div.querySelectorAll('.author-urls .url-entry');
             const authorUrls = [];
-            authorEntries.forEach(entry => {
+            authorEntries.forEach((entry, i) => {
                 let authorUrl = entry.querySelector('input[type="text"]').value.trim();
                 if (authorUrl && !/^https?:\/\//i.test(authorUrl)) {
                     authorUrl = 'http://' + authorUrl;
                 }
                 const authorPort = entry.querySelector('input[type="number"]').value.trim() || '';
+                let isDefault = false;
+                const defaultRadio = entry.querySelector('input[type="radio"]');
+                if (defaultRadio && defaultRadio.checked) {
+                    isDefault = true;
+                } else if (authorEntries.length === 1) {
+                    isDefault = true;
+                }
                 if (authorUrl) {
-                    authorUrls.push({ url: authorUrl, port: authorPort });
+                    authorUrls.push({ url: authorUrl, port: authorPort, default: isDefault });
                 }
             });
 
@@ -216,14 +260,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const publishEntries = div.querySelectorAll('.publish-urls .url-entry');
             const publishUrls = [];
-            publishEntries.forEach(entry => {
+            publishEntries.forEach((entry, i) => {
                 let publishUrl = entry.querySelector('input[type="text"]').value.trim();
                 if (publishUrl && !/^https?:\/\//i.test(publishUrl)) {
                     publishUrl = 'http://' + publishUrl;
                 }
                 const publishPort = entry.querySelector('input[type="number"]').value.trim() || '';
+                let isDefault = false;
+                const defaultRadio = entry.querySelector('input[type="radio"]');
+                if (defaultRadio && defaultRadio.checked) {
+                    isDefault = true;
+                } else if (publishEntries.length === 1) {
+                    isDefault = true;
+                }
                 if (publishUrl) {
-                    publishUrls.push({ url: publishUrl, port: publishPort });
+                    publishUrls.push({ url: publishUrl, port: publishPort, default: isDefault });
                 }
             });
 
@@ -261,94 +312,145 @@ document.addEventListener('DOMContentLoaded', function () {
             chrome.runtime.sendMessage({ action: "updateMenus" });
             const savePopup = document.getElementById('save-popup');
             savePopup.classList.add('show');
-            // Hide after 3 seconds
             setTimeout(() => {
                 savePopup.classList.remove('show');
-                // Optional: add 'hide' class if needed for animation
             }, 3000);
         });
     });
 
-    function makeSortableInstances() {
-        const container = instancesContainer;
+    // Custom Drag and Drop with threshold
+    function enableCustomDnD(container, itemSelector) {
         let draggedItem = null;
-        container.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('instance-group')) {
-                draggedItem = e.target;
-                e.dataTransfer.effectAllowed = 'move';
-                draggedItem.classList.add('dragging');
+        let placeholder = null;
+        let draggedClone = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        let startX = 0;
+        let startY = 0;
+        const dragThreshold = 5; // pixels
+
+        let isDragging = false;
+
+        container.addEventListener('mousedown', (e) => {
+            const item = e.target.closest(itemSelector);
+            if (!item) return;
+
+            // Determine if drag is allowed based on collapsed/expanded state and handle
+            let canDrag = false;
+            if (item.classList.contains('instance-group')) {
+                // If collapsed, drag from anywhere
+                // If expanded, drag only if handle is clicked
+                if (item.classList.contains('expanded')) {
+                    if (e.target.matches('.drag-handle')) canDrag = true;
+                } else {
+                    // collapsed
+                    canDrag = true;
+                }
+            } else if (item.classList.contains('url-entry') || item.classList.contains('global-link-entry')) {
+                // For URLs and global links, handle only
+                if ((e.target.matches('.drag-handle-url') || e.target.matches('.drag-handle-global'))) {
+                    canDrag = true;
+                }
             }
-        });
-        container.addEventListener('dragend', () => {
-            if (draggedItem) {
-                draggedItem.classList.remove('dragging');
-                draggedItem = null;
+
+            startX = e.clientX;
+            startY = e.clientY;
+            isDragging = false;
+
+            draggedItem = item;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+
+            // If cannot drag, we still record mouse events to distinguish click vs. drag
+            // Because we need to allow click to toggle
+            if (!canDrag) {
+                // We will just wait for mouseup and if no move beyond threshold, we toggle
+                draggedItem = item;
+            } else {
+                // canDrag means we can start drag if threshold exceeded
             }
-        });
-        container.addEventListener('dragover', (e) => {
+
             e.preventDefault();
-            const afterElement = getDragAfterElement(container, e.clientY, '.instance-group:not(.dragging)');
-            const dragging = container.querySelector('.instance-group.dragging');
-            if (!dragging) return;
-            if (afterElement == null) {
-                container.appendChild(dragging);
-            } else {
-                container.insertBefore(dragging, afterElement);
-            }
-        });
-    }
-
-    function makeGlobalLinksSortable(container) {
-        let draggedItem = null;
-        container.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('global-link-entry')) {
-                draggedItem = e.target;
-                e.dataTransfer.effectAllowed = 'move';
-                draggedItem.classList.add('dragging');
-            }
         });
 
-        container.addEventListener('dragend', () => {
-            if (draggedItem) {
-                draggedItem.classList.remove('dragging');
-                draggedItem = null;
+        function onMouseMove(e) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (!isDragging && dist > dragThreshold) {
+                // Start actual dragging only now
+                startDragging(e);
             }
-        });
 
-        container.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            const afterElement = getDragAfterElement(container, e.clientY, '.global-link-entry:not(.dragging)');
-            const dragging = container.querySelector('.global-link-entry.dragging');
-            if (!dragging) return;
-            if (afterElement == null) {
-                container.appendChild(dragging);
-            } else {
-                container.insertBefore(dragging, afterElement);
+            if (isDragging) {
+                draggedClone.style.left = (e.clientX - offsetX) + 'px';
+                draggedClone.style.top = (e.clientY - offsetY) + 'px';
+
+                const items = [...container.querySelectorAll(itemSelector)].filter(i => i !== draggedItem && i !== placeholder);
+                let insertBeforeEl = null;
+                for (const i of items) {
+                    const box = i.getBoundingClientRect();
+                    if (e.clientY < box.top + box.height / 2) {
+                        insertBeforeEl = i;
+                        break;
+                    }
+                }
+                if (insertBeforeEl) {
+                    container.insertBefore(placeholder, insertBeforeEl);
+                } else {
+                    container.appendChild(placeholder);
+                }
             }
-        });
-    }
-
-    function getDragAfterElement(container, y, selector) {
-        const draggableElements = [...container.querySelectorAll(selector)];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - (box.height / 2);
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    // Toggle instance-group expand on click (except on certain elements)
-    document.addEventListener('click', (e) => {
-        const instanceGroup = e.target.closest('.instance-group');
-        if (instanceGroup && !e.target.matches(
-            '.remove-instance, .remove-url, .remove-global-link, .add-url-btn, input, ' +
-            '.author-check, .publish-check, .drag-handle, .drag-handle-global, .collapse-button'
-        )) {
-            instanceGroup.classList.toggle('expanded');
         }
-    });
+
+        function startDragging(e) {
+            isDragging = true;
+            const rect = draggedItem.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            draggedClone = draggedItem.cloneNode(true);
+            draggedClone.classList.add('dragged-clone');
+            draggedClone.style.width = rect.width + 'px';
+            draggedClone.style.height = rect.height + 'px';
+            draggedClone.style.left = rect.left + 'px';
+            draggedClone.style.top = rect.top + 'px';
+            document.body.appendChild(draggedClone);
+
+            placeholder = document.createElement('div');
+            placeholder.style.width = rect.width + 'px';
+            placeholder.style.height = rect.height + 'px';
+            placeholder.style.margin = '10px';
+            draggedItem.parentNode.insertBefore(placeholder, draggedItem);
+            draggedItem.style.display = 'none';
+        }
+
+        function onMouseUp(e) {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            if (isDragging) {
+                // End drag
+                if (placeholder && draggedItem) {
+                    placeholder.parentNode.insertBefore(draggedItem, placeholder);
+                    draggedItem.style.display = '';
+                    placeholder.remove();
+                }
+                if (draggedClone) {
+                    draggedClone.remove();
+                }
+                draggedItem = null;
+                draggedClone = null;
+                placeholder = null;
+                isDragging = false;
+            } else {
+                // It was a click, not a drag
+                if (draggedItem && draggedItem.classList.contains('instance-group')) {
+                    // Toggle collapse if it was a click
+                    draggedItem.classList.toggle('expanded');
+                }
+                draggedItem = null;
+            }
+        }
+    }
 });

@@ -81,10 +81,15 @@ chrome.storage.sync.get([
         return null;
     }
 
+    function findDefaultUrl(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) return null;
+        const def = arr.find(u => u.default === true);
+        return def || arr[0];
+    }
+
     function addButtons() {
         const currentURL = window.location.href;
         const currentUrlObj = new URL(currentURL);
-        const currentProtocol = currentUrlObj.protocol;
 
         const matched = findMatchedInstance(currentURL);
         if (!matched) {
@@ -94,9 +99,10 @@ chrome.storage.sync.get([
 
         const { instance, type } = matched;
         
-        const primaryAuthor = instance.author && instance.author.length > 0 ? instance.author[0] : null;
-        const primaryPublish = instance.publish && instance.publish.length > 0 ? instance.publish[0] : null;
+        const primaryAuthor = findDefaultUrl(instance.author);
+        const primaryPublish = findDefaultUrl(instance.publish);
 
+        // Edit button
         if (enableEditButton && type === 'author' && !currentURL.includes('/editor.html/') && getWcmModeFromUrl(currentURL) === 'disabled') {
             const editButton = document.createElement('button');
             editButton.innerText = 'Go to Edit';
@@ -119,6 +125,7 @@ chrome.storage.sync.get([
             console.log("Edit button added to the page");
         }
 
+        // View as Published button
         if (enableViewAsPublishedButton && currentURL.includes('/editor.html/')) {
             const viewAsPublishedButton = document.createElement('button');
             viewAsPublishedButton.innerText = 'View as Published';
@@ -139,17 +146,18 @@ chrome.storage.sync.get([
             console.log("View as Published button added");
         }
 
-        if (enablePublishButton && currentURL.includes('/editor.html/') && primaryPublish) {
+        // Publish button on both editor.html and wcmmode=disabled (View as Published)
+        if (enablePublishButton && (currentURL.includes('/editor.html/') || getWcmModeFromUrl(currentURL) === 'disabled') && primaryPublish) {
             const publishButton = document.createElement('button');
             publishButton.innerText = 'Go to Publish';
             publishButton.id = 'publish-button';
             publishButton.className = 'publish-button';
 
             publishButton.addEventListener('click', () => {
-                const publishHostPort = getHostAndPort(primaryPublish.url, primaryPublish.port);
-                let newOrigin = `${currentProtocol}//${publishHostPort.hostname}`;
-                if (publishHostPort.port && publishHostPort.port !== '80' && publishHostPort.port !== '443') {
-                    newOrigin += `:${publishHostPort.port}`;
+                const publishUrlObj = new URL(primaryPublish.url);
+                let newOrigin = `${publishUrlObj.protocol}//${publishUrlObj.hostname}`;
+                if (primaryPublish.port && primaryPublish.port !== '80' && primaryPublish.port !== '443') {
+                    newOrigin += `:${primaryPublish.port}`;
                 }
 
                 let newURL = currentURL.replace(currentUrlObj.origin, newOrigin).replace('/editor.html/', '/');
@@ -161,6 +169,7 @@ chrome.storage.sync.get([
             console.log("Publish button added");
         }
 
+        // Author button if on publish
         if (enableAuthorButton && type === 'publish' && primaryAuthor) {
             const authorButton = document.createElement('button');
             authorButton.innerText = 'Go to Author';
@@ -168,10 +177,10 @@ chrome.storage.sync.get([
             authorButton.className = 'author-button';
 
             authorButton.addEventListener('click', () => {
-                const authorHostPort = getHostAndPort(primaryAuthor.url, primaryAuthor.port);
-                let newOrigin = `${currentProtocol}//${authorHostPort.hostname}`;
-                if (authorHostPort.port && authorHostPort.port !== '80' && authorHostPort.port !== '443') {
-                    newOrigin += `:${authorHostPort.port}`;
+                const authorUrlObj = new URL(primaryAuthor.url);
+                let newOrigin = `${authorUrlObj.protocol}//${authorUrlObj.hostname}`;
+                if (primaryAuthor.port && primaryAuthor.port !== '80' && primaryAuthor.port !== '443') {
+                    newOrigin += `:${primaryAuthor.port}`;
                 }
 
                 let newURL = currentURL.replace(currentUrlObj.origin, newOrigin);

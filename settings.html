@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Settings</title>
+    <!-- 
+    We keep the CSS for the settings page inline in this HTML file 
+    to prevent styling from leaking into other extension pages.
+    -->
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
         body {
             margin: 0;
             padding: 20px;
-            background: #222;
-            color: #f0f0f0;
+            background: #1e1e1e;
+            color: #e0e0e0;
             font-family: 'Inter', sans-serif;
             transition: background 0.3s, color 0.3s;
             box-sizing: border-box;
@@ -20,11 +25,10 @@
         }
 
         body.light-mode {
-            background: #f8f8f8;
+            background: #f5f5f5;
             color: #222;
         }
 
-        /* Remove blue focus outlines and select highlights */
         button, input, select {
             outline: none;
             -webkit-tap-highlight-color: transparent;
@@ -36,6 +40,7 @@
             user-select: none;
         }
 
+        /* THEME TOGGLE */
         .theme-toggle {
             position: absolute;
             top: 20px;
@@ -57,15 +62,17 @@
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 20px;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3),
-                        inset -2px -2px 5px rgba(255,255,255,0.02);
+            box-shadow: 
+                inset 1px 1px 3px rgba(0,0,0,0.5),
+                inset -1px -1px 3px rgba(255,255,255,0.05);
             position: relative;
             transition: background 0.3s;
         }
         body.light-mode .section {
-            background: #fff;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05),
-                        inset -2px -2px 5px rgba(255,255,255,0.7);
+            background: #ffffffcc;
+            box-shadow:
+                0 1px 3px rgba(0,0,0,0.1),
+                0 0 10px rgba(255,255,255,0.5);
         }
 
         h1, h2 {
@@ -84,7 +91,7 @@
         p {
             margin-bottom: 15px;
             line-height: 1.5;
-            color: #ddd;
+            color: #ccc;
         }
         body.light-mode p {
             color: #333;
@@ -94,46 +101,48 @@
             background: #333;
             border: 1px solid #444;
             color: #f0f0f0;
-            padding: 5px 10px;
+            padding: 6px 10px;
             border-radius: 4px;
             font-size: 14px;
-            width: calc(100% - 24px);
+            width: auto;
             margin-bottom: 10px;
-            transition: border-color 0.2s;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
         input[type="text"]:focus, input[type="number"]:focus {
-            border-color: #666;
-            outline: none;
+            border-color: #4c8dff;
+            box-shadow: 0 0 5px rgba(76,141,255,0.7);
         }
         body.light-mode input[type="text"], body.light-mode input[type="number"] {
             background: #fafafa;
             color: #222;
             border: 1px solid #ccc;
         }
+        body.light-mode input[type="text"]:focus, body.light-mode input[type="number"]:focus {
+            border-color: #2196F3;
+            box-shadow: 0 0 5px rgba(33,150,243,0.7);
+        }
+
+        input[type="text"], input[type="number"] {
+            caret-color: #4c8dff;
+        }
 
         .instance-group, .global-link-entry, .url-entry {
             background: #2f2f2f;
             border-radius: 10px;
             padding: 10px;
-            margin: 10px 10px 10px 10px;
-            margin-bottom: 10px;
+            margin: 10px;
             position: relative;
             box-shadow:
-                5px 5px 10px rgba(0,0,0,0.5),
-                -5px -5px 10px rgba(255,255,255,0.02);
-            transition: background 0.2s, box-shadow 0.2s;
-            cursor: pointer; 
-        }
-        .instance-group:hover, .global-link-entry:hover, .url-entry:hover {
-            box-shadow:
-                2px 2px 5px rgba(0,0,0,0.6),
-                -2px -2px 5px rgba(255,255,255,0.05);
+                2px 2px 5px rgba(0,0,0,0.5),
+                -2px -2px 5px rgba(255,255,255,0.02);
+            cursor: default;
+            transition: transform 0.25s ease, background 0.2s, box-shadow 0.2s;
         }
         body.light-mode .instance-group, body.light-mode .global-link-entry, body.light-mode .url-entry {
-            background: #f0f0f0;
+            background: #ffffffcc;
             box-shadow:
-                2px 2px 5px rgba(0,0,0,0.1),
-                -2px -2px 5px rgba(255,255,255,0.9);
+                1px 1px 3px rgba(0,0,0,0.2),
+                -1px -1px 3px rgba(255,255,255,0.9);
             color: #222;
         }
 
@@ -142,7 +151,10 @@
             align-items: center;
             background: none;
             margin-bottom: 10px;
+            cursor: pointer;
+            padding-bottom: 5px; 
         }
+
         .instance-title {
             font-weight: 500;
             flex: 1;
@@ -152,75 +164,89 @@
             color: #222;
         }
 
-        .drag-handle, .drag-handle-global {
+        .drag-handle, .drag-handle-global, .drag-handle-url {
             user-select: none;
             font-size: 16px;
             margin-right: 10px;
-            cursor: move;
+            cursor: grab;
             opacity: 0.7;
             transition: opacity 0.2s;
         }
-        .drag-handle:hover, .drag-handle-global:hover {
+        .drag-handle:hover, .drag-handle-global:hover, .drag-handle-url:hover {
             opacity: 1;
         }
 
         .collapse-button {
-            background: none;
+            width: 24px; height: 24px;
+            position: relative;
             border: none;
-            color: #aaa;
-            font-size: 18px;
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            transition: color 0.2s, transform 0.2s;
+            background: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
         }
-        .collapse-button:hover {
-            color: #fff;
-            transform: scale(1.1);
+        .collapse-button:before, .collapse-button:after {
+            content: '';
+            position: absolute;
+            background: #aaa;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .collapse-button:before {
+            width: 2px; height: 14px;
+            top: 5px; left: 11px;
+            transform-origin: center;
+        }
+        .collapse-button:after {
+            width: 14px; height: 2px;
+            top: 11px; left: 5px;
+        }
+        .instance-group.expanded .collapse-button:before {
+            transform: rotate(-90deg);
+            opacity: 0;
         }
 
         .instance-body {
             overflow: hidden;
             max-height: 0;
-            transition: max-height 0.3s ease;
-            border-top: 1px solid #444;
+            transition: max-height 0.2s ease;
             padding-top: 0;
+            border-top: none;
         }
         .instance-group.expanded .instance-body {
-            max-height: 1000px;
+            max-height: 600px;
             padding-top: 10px;
+            border-top: 1px solid #444;
         }
-        body.light-mode .instance-body {
+        body.light-mode .instance-group.expanded .instance-body {
             border-top: 1px solid #ccc;
         }
 
         .add-url-btn, .remove-url, .remove-instance, .remove-global-link {
-            background: none;
-            border: none;
-            font-size: 14px;
+            background: #444;
+            border: 1px solid #555;
+            font-size: 13px;
             cursor: pointer;
             border-radius: 4px;
-            padding: 3px 8px;
-            transition: background 0.2s, transform 0.1s;
+            padding: 4px 8px;
+            transition: background 0.2s, transform 0.1s, border-color 0.2s;
             color: #f0f0f0;
+            margin-top: 5px;
         }
-        .add-url-btn {
-            color: #4CAF50;
+        .add-url-btn:hover, .remove-url:hover, .remove-instance:hover, .remove-global-link:hover {
+            background: #555;
+            transform: scale(1.02);
         }
-        .add-url-btn:hover {
-            background: rgba(76,175,80,0.2);
-            transform: scale(1.05);
+        body.light-mode .add-url-btn, body.light-mode .remove-url, body.light-mode .remove-instance, body.light-mode .remove-global-link {
+            background: #ddd;
+            color: #222;
+            border: 1px solid #bbb;
         }
-        .remove-url, .remove-instance, .remove-global-link {
-            color: #ff6666;
-        }
-        .remove-url:hover, .remove-instance:hover, .remove-global-link:hover {
-            background: rgba(255,0,0,0.2);
-            transform: scale(1.05);
+        body.light-mode .add-url-btn:hover, body.light-mode .remove-url:hover, body.light-mode .remove-instance:hover, body.light-mode .remove-global-link:hover {
+            background: #ccc;
         }
 
         .fancy-button {
-            background: #2f2f2f;
+            background: #3a3a3a;
             color: #f0f0f0;
             border: none;
             padding: 8px 20px;
@@ -229,34 +255,34 @@
             font-size: 14px;
             font-family: 'Inter', sans-serif;
             box-shadow:
-                5px 5px 10px rgba(0,0,0,0.5),
-                -5px -5px 10px rgba(255,255,255,0.02);
+                2px 2px 5px rgba(0,0,0,0.5),
+                -2px -2px 5px rgba(255,255,255,0.02);
             transition: all 0.2s ease-in-out;
             margin-right: 10px;
         }
         .fancy-button:hover {
             box-shadow:
-                2px 2px 5px rgba(0,0,0,0.6),
-                -2px -2px 5px rgba(255,255,255,0.05);
-            transform: translateY(-2px);
+                1px 1px 3px rgba(0,0,0,0.6),
+                -1px -1px 3px rgba(255,255,255,0.05);
+            transform: translateY(-1px);
         }
         .fancy-button:active {
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5),
-                        inset -2px -2px 5px rgba(255,255,255,0.02);
-            transform: translateY(2px);
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.5),
+                        inset -1px -1px 3px rgba(255,255,255,0.02);
+            transform: translateY(1px);
         }
 
         body.light-mode .fancy-button {
-            background: #e3e3e3;
+            background: #e0e0e0;
             color: #333;
             box-shadow:
-                3px 3px 6px rgba(0,0,0,0.1),
-                -3px -3px 6px rgba(255,255,255,0.7);
+                1px 1px 3px rgba(0,0,0,0.1),
+                -1px -1px 3px rgba(255,255,255,0.7);
         }
         body.light-mode .fancy-button:hover {
             box-shadow:
-                2px 2px 4px rgba(0,0,0,0.2),
-                -2px -2px 4px rgba(255,255,255,0.8);
+                1px 1px 2px rgba(0,0,0,0.2),
+                -1px -1px 2px rgba(255,255,255,0.8);
         }
 
         .primary-button {
@@ -273,84 +299,73 @@
             background: linear-gradient(145deg, #EC407A, #FF80AB);
         }
 
+        .url-entry input[type="text"] {
+            margin-right: 10px;
+            width: calc(70% - 10px);
+        }
+        .url-entry input[type="number"] {
+            width: calc(20% - 10px);
+            margin-right: 10px;
+        }
+
+        .global-link-entry input[type="text"] {
+            display: inline-block;
+            width: calc(35% - 10px);
+            margin-right: 10px;
+        }
+
         .visibility-checkboxes {
             display: flex;
             align-items: center;
             margin-left: 10px;
         }
+
         .visibility-checkboxes label {
             color: #aaa;
             font-size: 13px;
             margin-right: 5px;
-        }
-        .author-check, .publish-check {
-            transform: scale(1.2);
-            margin-right: 10px;
+            display: flex; 
+            align-items: center;
+            background: #444;
+            border-radius: 3px;
+            padding: 2px 5px;
+            border: 1px solid #555;
             cursor: pointer;
+        }
+        .visibility-checkboxes label:hover {
+            background: #555;
+        }
+        .visibility-checkboxes input[type="checkbox"] {
+            margin-right: 5px;
+            transform: scale(1.1);
             accent-color: #4CAF50;
         }
+        body.light-mode .visibility-checkboxes label {
+            background: #ddd;
+            border: 1px solid #bbb;
+            color: #333;
+        }
+        body.light-mode .visibility-checkboxes label:hover {
+            background: #ccc;
+        }
 
-        /* In-Page Buttons: now bottom right */
-        .edit-button, .switch-mode-button, .publish-button, .author-button {
+        .remove-global-link {
+            margin-left: 10px;
+        }
+
+        .dragged-clone {
             position: fixed;
-            right: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            color: #fff;
-            border: none;
-            border-radius: 20px;
-            padding: 6px 12px;
-            z-index: 9999; 
-            box-shadow:
-                5px 5px 10px rgba(0,0,0,0.5),
-                -5px -5px 10px rgba(255,255,255,0.02);
-            transition: all 0.2s ease-in-out;
-        }
-
-        .edit-button {
-            background: linear-gradient(145deg, #6a1b9a, #8e24aa);
-            bottom: 20px;
-        }
-        .switch-mode-button {
-            background: linear-gradient(145deg, #1f6feb, #4c8dff);
-            bottom: 60px;
-        }
-        .publish-button {
-            background: linear-gradient(145deg, #388e3c, #4caf50);
-            bottom: 100px;
-        }
-        .author-button {
-            background: linear-gradient(145deg, #f57c00, #ffa726);
-            bottom: 140px;
-        }
-
-        body.light-mode .edit-button {
-            background: linear-gradient(145deg, #9c27b0, #ba68c8);
-        }
-        body.light-mode .switch-mode-button {
-            background: linear-gradient(145deg, #2196F3, #64B5F6);
-        }
-        body.light-mode .publish-button {
-            background: linear-gradient(145deg, #4CAF50, #81C784);
-        }
-        body.light-mode .author-button {
-            background: linear-gradient(145deg, #FFA726, #FFB74D);
-        }
-
-        .edit-button:hover, .switch-mode-button:hover, .publish-button:hover, .author-button:hover {
+            top: 0;
+            left: 0;
+            pointer-events: none;
             box-shadow:
                 2px 2px 5px rgba(0,0,0,0.6),
                 -2px -2px 5px rgba(255,255,255,0.05);
-            transform: translateY(-2px);
-        }
-        .edit-button:active, .switch-mode-button:active, .publish-button:active, .author-button:active {
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5),
-                        inset -2px -2px 5px rgba(255,255,255,0.02);
-            transform: translateY(2px);
+            opacity: 0.9;
+            z-index: 2000;
+            border-radius: 10px;
         }
 
-        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -369,8 +384,8 @@
             border-radius: 10px;
             text-align: center;
             box-shadow:
-                5px 5px 10px rgba(0,0,0,0.5),
-                -5px -5px 10px rgba(255,255,255,0.02);
+                2px 2px 5px rgba(0,0,0,0.5),
+                -2px -2px 5px rgba(255,255,255,0.02);
         }
         .modal-content p {
             margin-bottom: 20px;
@@ -383,11 +398,10 @@
             background: #fff;
             color: #222;
             box-shadow:
-                2px 2px 5px rgba(0,0,0,0.1),
-                -2px -2px 5px rgba(255,255,255,0.8);
+                1px 1px 3px rgba(0,0,0,0.1),
+                -1px -1px 3px rgba(255,255,255,0.8);
         }
 
-        /* Save Popup Modal */
         #save-popup {
             position: fixed;
             bottom: 20px;
@@ -398,8 +412,8 @@
             padding: 10px 20px;
             border-radius: 20px;
             box-shadow:
-                2px 2px 5px rgba(0,0,0,0.5),
-                -2px -2px 5px rgba(255,255,255,0.02);
+                1px 1px 3px rgba(0,0,0,0.5),
+                -1px -1px 3px rgba(255,255,255,0.02);
             display: none;
             z-index: 1001;
             transition: opacity 0.3s, transform 0.3s;
@@ -408,8 +422,8 @@
             background: #fff;
             color: #222;
             box-shadow:
-                2px 2px 4px rgba(0,0,0,0.1),
-                -2px -2px 4px rgba(255,255,255,0.7);
+                1px 1px 3px rgba(0,0,0,0.1),
+                -1px -1px 3px rgba(255,255,255,0.7);
         }
         #save-popup.show {
             display: block;
@@ -434,7 +448,7 @@
         <div class="section">
             <h2>Global Contextual Menu Items</h2>
             <p>These items appear under each instance's context menu.  
-               Use the checkboxes (A/P) to show them under Author (A) and/or Publish (P).</p>
+               Use the toggles below to show them under <strong>Author</strong> or <strong>Publish</strong>.</p>
             <div id="global-links-container"></div>
             <button type="button" id="add-global-link" class="fancy-button accent-button">Add Global Menu Item</button>
         </div>
