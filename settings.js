@@ -140,15 +140,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (confirmed) container.remove();
             });
         });
-
-        const header = container.querySelector('.instance-header');
-        header.addEventListener('click', (e) => {
-            // Toggling will be handled by the threshold logic in DnD
-            // If no drag occurred, we treat as click
-        });
-
-        enableCustomDnD(authorContainer, '.url-entry');
-        enableCustomDnD(publishContainer, '.url-entry');
     }
 
     function addUrlEntry(container, urlVal, portVal, isDefault = false) {
@@ -318,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Custom Drag and Drop with threshold
+    // Custom Drag and Drop with threshold and restricted toggle logic
     function enableCustomDnD(container, itemSelector) {
         let draggedItem = null;
         let placeholder = null;
@@ -327,6 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let offsetY = 0;
         let startX = 0;
         let startY = 0;
+        let startTarget = null;
         const dragThreshold = 5; // pixels
 
         let isDragging = false;
@@ -335,42 +327,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const item = e.target.closest(itemSelector);
             if (!item) return;
 
-            // Determine if drag is allowed based on collapsed/expanded state and handle
-            let canDrag = false;
-            if (item.classList.contains('instance-group')) {
-                // If collapsed, drag from anywhere
-                // If expanded, drag only if handle is clicked
-                if (item.classList.contains('expanded')) {
-                    if (e.target.matches('.drag-handle')) canDrag = true;
-                } else {
-                    // collapsed
-                    canDrag = true;
-                }
-            } else if (item.classList.contains('url-entry') || item.classList.contains('global-link-entry')) {
-                // For URLs and global links, handle only
-                if ((e.target.matches('.drag-handle-url') || e.target.matches('.drag-handle-global'))) {
-                    canDrag = true;
-                }
-            }
-
             startX = e.clientX;
             startY = e.clientY;
-            isDragging = false;
+            startTarget = e.target;
 
             draggedItem = item;
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
-
-            // If cannot drag, we still record mouse events to distinguish click vs. drag
-            // Because we need to allow click to toggle
-            if (!canDrag) {
-                // We will just wait for mouseup and if no move beyond threshold, we toggle
-                draggedItem = item;
-            } else {
-                // canDrag means we can start drag if threshold exceeded
-            }
-
-            e.preventDefault();
+            // Do not prevent default here to allow input focus
+            
         });
 
         function onMouseMove(e) {
@@ -378,8 +343,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const dy = e.clientY - startY;
             const dist = Math.sqrt(dx*dx + dy*dy);
             if (!isDragging && dist > dragThreshold) {
-                // Start actual dragging only now
-                startDragging(e);
+                // Check if we can drag
+                if (canDrag(draggedItem, startTarget)) {
+                    startDragging(e);
+                    // Once we start dragging, we can prevent default to avoid text selection
+                    e.preventDefault();
+                }
             }
 
             if (isDragging) {
@@ -401,6 +370,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     container.appendChild(placeholder);
                 }
             }
+        }
+
+        function canDrag(item, target) {
+            // Determine if drag is allowed
+            if (item.classList.contains('instance-group')) {
+                // If collapsed, drag from anywhere in the instance-group
+                // If expanded, only from .drag-handle
+                if (item.classList.contains('expanded')) {
+                    return target.matches('.drag-handle');
+                } else {
+                    // collapsed
+                    return true;
+                }
+            } else if (item.classList.contains('url-entry')) {
+                return target.matches('.drag-handle-url');
+            } else if (item.classList.contains('global-link-entry')) {
+                return target.matches('.drag-handle-global');
+            }
+            return false;
         }
 
         function startDragging(e) {
@@ -445,9 +433,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 isDragging = false;
             } else {
                 // It was a click, not a drag
+                // Only toggle if clicked inside .instance-header and not on input or button
                 if (draggedItem && draggedItem.classList.contains('instance-group')) {
-                    // Toggle collapse if it was a click
-                    draggedItem.classList.toggle('expanded');
+                    const header = draggedItem.querySelector('.instance-header');
+                    // Check if startTarget is inside header
+                    if (header && header.contains(startTarget)) {
+                        // Check if startTarget is not an input or button
+                        if (!startTarget.matches('input, button, .remove-instance, .add-url-btn, .remove-url, .remove-global-link')) {
+                            // Toggle collapse
+                            draggedItem.classList.toggle('expanded');
+                        }
+                    }
                 }
                 draggedItem = null;
             }
