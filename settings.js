@@ -177,6 +177,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function addUrlEntry(container, urlVal, portVal, isDefault = false) {
         const div = document.createElement('div');
         div.classList.add('url-entry');
+        if (isDefault) {
+            div.dataset.default = 'true';
+        }
         div.innerHTML = `
             <span class="drag-handle-url">⋮</span>
             <input type="text" placeholder="http://example.com" value="${urlVal}">
@@ -204,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (existingRadio) existingRadio.remove();
         });
         if (urlEntries.length > 1) {
+            let hasDefault = false;
             urlEntries.forEach((entry, idx) => {
                 const label = document.createElement('label');
                 label.style.cssText = "margin-left:10px; font-size:13px; color:#aaa;";
@@ -214,10 +218,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 radio.name = 'defaultUrlGroup-' + container
                     .closest('.instance-group')
                     .querySelector('input[name^="instance-name"]').name;
-                if (idx === 0) radio.checked = true;
+                if (entry.dataset.default === 'true') {
+                    radio.checked = true;
+                    hasDefault = true;
+                }
                 label.appendChild(radio);
                 entry.appendChild(label);
             });
+            if (!hasDefault) {
+                const firstRadio = urlEntries[0].querySelector('input[type="radio"]');
+                if (firstRadio) firstRadio.checked = true;
+            }
         }
     }
 

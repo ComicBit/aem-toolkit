@@ -1,0 +1,16 @@
+{
+  "name": "aem-toolkit",
+  "version": "1.0.0",
+  "description": "**AEM Toolkit** is a Chrome extension designed to streamline your Adobe Experience Manager (AEM) development and content management tasks. It simplifies navigation between author and publish instances, enhances your workflow with in-page controls, and provides quick access to essential AEM tools like OSGi bundles and CRXDE.",
+  "main": "background.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "jest": "^30.0.0"
+  }
+}

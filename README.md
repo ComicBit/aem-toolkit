@@ -59,7 +59,7 @@
 ## Usage
 
 ### Configuring Instances
-1. Click the extension icon in Chrome and go to "Options."
+1. Click the extension icon in Chrome and open the Settings page.
 2. Add your AEM instances:
    - Provide the name, author URL, and publish URL.
    - Include port numbers if necessary (e.g., 4502 for author, 4503 for publish).

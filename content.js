@@ -50,13 +50,16 @@ function getWcmModeFromUrl(url) {
     return urlObj.searchParams.get('wcmmode');
 }
 
-chrome.storage.sync.get([
-    'instances', 
-    'openNewTab', 
-    'enableAuthorButton', 
-    'enableViewAsPublishedButton', 
-    'enablePublishButton',
-    'enableEditButton'
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { getHostAndPort, urlsMatch, getWcmModeFromUrl };
+} else {
+    chrome.storage.sync.get([
+        'instances',
+        'openNewTab',
+        'enableAuthorButton',
+        'enableViewAsPublishedButton',
+        'enablePublishButton',
+        'enableEditButton'
 ], (data) => {
     const instances = data.instances || [];
     const openNewTab = data.openNewTab || false;
@@ -202,3 +205,4 @@ chrome.storage.sync.get([
         addButtons();
     }
 });
+}
