@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        /* Copy of styles from root settings.html */
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 20px; background: #1e1e1e; color: #e0e0e0; font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; }
+        body.light-mode { background: #f5f5f5; color: #222; }
+        button, input, select { outline: none; -webkit-tap-highlight-color: transparent; user-select: none; cursor: pointer; }
+        button:focus, input:focus, select:focus { outline: none; }
+        body.dragging, body.dragging * { user-select: none !important; cursor: grabbing !important; }
+        .theme-toggle { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; color: currentColor; transition: transform 0.2s; z-index: 999; }
+        .theme-toggle:hover { transform: scale(1.1); }
+        .section { background: #2a2a2a; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.5), inset -1px -1px 3px rgba(255,255,255,0.05); position: relative; transition: background 0.3s; }
+        body.light-mode .section { background: #ffffffcc; box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 0 10px rgba(255,255,255,0.5); }
+        h1, h2 { margin: 0; font-weight: 500; }
+        h1 { font-size: 24px; margin-bottom: 30px; }
+        h2 { font-size: 20px; margin-bottom: 15px; }
+        p { margin-bottom: 15px; line-height: 1.5; color: #ccc; }
+        body.light-mode p { color: #333; }
+        input[type="text"], input[type="number"] { background: #333; border: 1px solid #444; color: #f0f0f0; padding: 8px 10px; border-radius: 4px; font-size: 14px; margin-top: 5px; margin-bottom: 5px; transition: border-color 0.3s, box-shadow 0.3s; caret-color: #ff00ff; animation: caret-blink 1.2s infinite step-end; }
+        @keyframes caret-blink { 50% { caret-color: transparent; } }
+        input[type="text"]:focus, input[type="number"]:focus { border-color: #ff00ff; box-shadow: 0 0 6px 3px rgba(255,0,255,0.4); }
+        body.light-mode input[type="text"], body.light-mode input[type="number"] { background: #fafafa; color: #222; border: 1px solid #ccc; }
+        body.light-mode input[type="text"]:focus, body.light-mode input[type="number"]:focus { border-color: #ff00ff; box-shadow: 0 0 6px 3px rgba(255,0,255,0.4); }
+        .instance-group { background: #2f2f2f; border-radius: 10px; margin: 10px 0; position: relative; box-shadow: 2px 2px 5px rgba(0,0,0,0.5), -2px -2px 5px rgba(255,255,255,0.02); transition: transform 0.25s ease, background 0.2s, box-shadow 0.2s; cursor: default; }
+        .instance-group:hover { background-color: #343434; border-radius: 10px; }
+        body.light-mode .instance-group { background: #ffffffcc; box-shadow: 1px 1px 3px rgba(0,0,0,0.2), -1px -1px 3px rgba(255,255,255,0.9); color: #222; }
+        .instance-header { display: flex; align-items: center; background: none; padding: 10px; transition: background-color 0.2s; }
+        .instance-header:hover { background-color: rgba(255,255,255,0.05); }
+        .instance-title { font-weight: 500; flex: 1; color: #fff; }
+        body.light-mode .instance-title { color: #222; }
+        .drag-handle { user-select: none; font-size: 16px; cursor: grab; opacity: 0.7; transition: opacity 0.2s; margin-right: 10px; }
+        .drag-handle:hover { opacity: 1; }
+        .collapse-button { width: 24px; height: 24px; position: relative; border: none; background: none; padding: 0; margin: 0; cursor: pointer; }
+        .collapse-button:before, .collapse-button:after { content: ''; position: absolute; background: #aaa; transition: transform 0.3s ease, opacity 0.3s ease; }
+        .collapse-button:before { width: 2px; height: 14px; top: 5px; left: 11px; transform-origin: center; }
+        .collapse-button:after { width: 14px; height: 2px; top: 11px; left: 5px; }
+        .instance-group.expanded .collapse-button:before { transform: rotate(-90deg); opacity: 0; }
+        .instance-body { overflow: hidden; max-height: 0; margin-bottom: 0; transition: max-height 0.2s ease, margin-bottom 0.2s ease; padding: 0 10px; }
+        .instance-group.expanded .instance-body { max-height: 800px; margin-bottom: 10px; }
+        .url-entry, .global-link-entry { display: flex; align-items: center; background: #2f2f2f; border-radius: 10px; padding: 10px; margin: 10px 0; position: relative; box-shadow: 2px 2px 5px rgba(0,0,0,0.5), -2px -2px 5px rgba(255,255,255,0.02); transition: transform 0.25s ease, background 0.2s, box-shadow 0.2s; }
+        .url-entry input[type="text"] { flex: 1 1 auto; margin-right: 5px; }
+        .url-entry input[type="number"] { flex: 0 0 80px; margin-right: 5px; }
+        .drag-handle-url, .drag-handle-global { cursor: grab; opacity: 0.7; margin-right: 10px; }
+        .drag-handle-url:hover, .drag-handle-global:hover { opacity: 1; }
+        body.light-mode .url-entry, body.light-mode .global-link-entry { background: #ffffffcc; box-shadow: 1px 1px 3px rgba(0,0,0,0.2), -1px -1px 3px rgba(255,255,255,0.9); color: #222; }
+        .fancy-button { border: none; border-radius: 20px; padding: 8px 16px; font-size: 14px; font-family: 'Inter', sans-serif; margin-right: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5), -2px -2px 5px rgba(255,255,255,0.02); transition: all 0.2s ease-in-out; cursor: pointer; }
+        .fancy-button:hover { transform: translateY(-1px); }
+        .fancy-button:active { transform: translateY(1px); box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.02); }
+        .btn-primary { background: linear-gradient(145deg, #1f6feb, #4c8dff); color: #fff; }
+        .btn-add { background: linear-gradient(145deg, #2ecc71, #58d68d); color: #fff; }
+        .btn-remove { background: linear-gradient(145deg, #ff4d4d, #ff6666); color: #fff; }
+        .btn-secondary { background: linear-gradient(145deg, #e91e63, #ff4081); color: #fff; }
+        body.light-mode .btn-primary { background: linear-gradient(145deg, #2196F3, #64B5F6); }
+        body.light-mode .btn-add { background: linear-gradient(145deg, #2ecc71, #81d98b); }
+        body.light-mode .btn-remove { background: linear-gradient(145deg, #ff7f7f, #ffaaaa); }
+        body.light-mode .btn-secondary { background: linear-gradient(145deg, #EC407A, #FF80AB); }
+        .visibility-checkboxes { display: flex; align-items: center; margin-right: 10px; }
+        .visibility-checkboxes label { color: #aaa; font-size: 13px; margin-right: 5px; display: flex; align-items: center; background: #444; border-radius: 3px; padding: 2px 5px; border: 1px solid #555; cursor: pointer; }
+        .visibility-checkboxes label:hover { background: #555; }
+        .visibility-checkboxes input[type="checkbox"] { margin-right: 5px; transform: scale(1.1); accent-color: #4CAF50; }
+        body.light-mode .visibility-checkboxes label { background: #ddd; border: 1px solid #bbb; color: #333; }
+        body.light-mode .visibility-checkboxes label:hover { background: #ccc; }
+        .dragged-clone { position: fixed; top: 0; left: 0; pointer-events: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.6), -2px -2px 5px rgba(255,255,255,0.05); opacity: 0.9; z-index: 2000; border-radius: 10px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: #2f2f2f; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.5), -2px -2px 5px rgba(255,255,255,0.02); }
+        .modal-content p { margin-bottom: 20px; color: #f0f0f0; }
+        .modal-buttons button { margin: 0 10px; }
+        body.light-mode .modal-content { background: #fff; color: #222; box-shadow: 1px 1px 3px rgba(0,0,0,0.1), -1px -1px 3px rgba(255,255,255,0.8); }
+        #save-popup { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2f2f2f; color: #f0f0f0; padding: 10px 20px; border-radius: 20px; box-shadow: 1px 1px 3px rgba(0,0,0,0.5), -1px -1px 3px rgba(255,255,255,0.02); display: none; z-index: 1001; transition: opacity 0.3s, transform 0.3s; }
+        body.light-mode #save-popup { background: #fff; color: #222; box-shadow: 1px 1px 3px rgba(0,0,0,0.1), -1px -1px 3px rgba(255,255,255,0.7); }
+        #save-popup.show { display: block; opacity: 1; }
+        #save-popup.hide { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    </style>
+</head>
+<body>
+    <button type="button" class="theme-toggle" id="theme-toggle">🌙</button>
+    <h1>Settings</h1>
+    <form id="settings-form">
+        <div class="section">
+            <h2>Instances</h2>
+            <div id="instances-container"></div>
+            <button type="button" id="add-instance" class="fancy-button btn-add">Add Instance</button>
+        </div>
+        <div class="section">
+            <h2>Global Contextual Menu Items</h2>
+            <p>These items appear under each instance's context menu. Use the toggles below to show them under <strong>Author</strong> or <strong>Publish</strong>.</p>
+            <div id="global-links-container"></div>
+            <button type="button" id="add-global-link" class="fancy-button btn-secondary">Add Global Menu Item</button>
+        </div>
+        <button type="submit" class="fancy-button btn-primary">Save</button>
+    </form>
+
+    <div id="confirmation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <p id="confirmation-message">Are you sure you want to remove this item?</p>
+            <div class="modal-buttons">
+                <button type="button" id="confirm-yes" class="fancy-button btn-remove">Yes</button>
+                <button type="button" id="confirm-no" class="fancy-button btn-secondary">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="save-popup">Settings saved successfully! 🎉</div>
+
+    <script src="settings.js"></script>
+</body>
+</html>

@@ -56,10 +56,38 @@
 
 ---
 
+## Firefox (WebExtension MV3)
+
+A Firefox build is included under the `firefox/` folder, using `browser.*` APIs and the `menus` permission.
+
+Temporary load for development:
+- Open `about:debugging#/runtime/this-firefox`
+- Click "Load Temporary Add-on"
+- Select the file `firefox/manifest.json`
+
+Options/settings:
+- Open about:addons → Extensions → AEM Toolkit (Firefox) → Preferences, or
+- Directly open the options page via the extension’s options link. The settings page is the same as Chrome’s, adapted to use `browser.storage.sync`.
+
+Build and sign (optional):
+- Install `web-ext` (Node.js): `npm i -g web-ext`
+- From the `firefox/` directory run:
+  ```bash
+  web-ext run    # for local testing
+  web-ext build  # to generate a distributable .zip
+  ```
+- For distribution on AMO, you’ll need to sign the add-on. See: https://extensionworkshop.com/
+
+Notes:
+- The Firefox build doesn’t include a toolbar icon by default (no popup is required). Context menus and content scripts provide the main functionality. If you want a custom toolbar icon, copy the PNGs from `/icons` into `firefox/icons/` and add an `action` and `icons` block to `firefox/manifest.json`.
+- Requires Firefox 109+ (Manifest V3 support).
+
+---
+
 ## Usage
 
 ### Configuring Instances
-1. Click the extension icon in Chrome and go to "Options."
+1. Click the extension icon in Chrome and go to "Options." (In Firefox, open the extension Preferences.)
 2. Add your AEM instances:
    - Provide the name, author URL, and publish URL.
    - Include port numbers if necessary (e.g., 4502 for author, 4503 for publish).

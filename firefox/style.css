@@ -1,0 +1,56 @@
+/* content.css (Firefox) */
+/* Styles for in-page buttons like Go to Author, Publish, etc. */
+.edit-button, .switch-mode-button, .publish-button, .author-button {
+    position: fixed;
+    right: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 12px;
+    z-index: 9999;
+    box-shadow:
+        5px 5px 10px rgba(0,0,0,0.5),
+        -5px -5px 10px rgba(255,255,255,0.02);
+    transition: all 0.2s ease-in-out;
+}
+
+.edit-button {
+    background: linear-gradient(145deg, #6a1b9a, #8e24aa);
+    bottom: 30px;
+}
+.switch-mode-button {
+    background: linear-gradient(145deg, #1f6feb, #4c8dff);
+    bottom: 30px;
+}
+.publish-button {
+    background: linear-gradient(145deg, #388e3c, #4caf50);
+    bottom: 70px;
+}
+.author-button {
+    background: linear-gradient(145deg, #f57c00, #ffa726);
+    bottom: 30px;
+}
+
+.edit-button:hover, .switch-mode-button:hover, .publish-button:hover, .author-button:hover {
+    box-shadow:
+        2px 2px 5px rgba(0,0,0,0.6),
+        -2px -2px 5px rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+}
+.edit-button:active, .switch-mode-button:active, .publish-button:active, .author-button:active {
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5),
+                inset -2px -2px 5px rgba(255,255,255,0.02);
+    transform: translateY(2px);
+}
+button {
+    outline: none;
+}
+button:focus-visible {
+    outline: none;
+}
+
+/* If you use dark/light mode on content pages, you might dynamically inject classes or handle that in content.js.
+   For now, this CSS remains static. */
