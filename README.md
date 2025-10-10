@@ -129,4 +129,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-For suggestions, issues, or questions, open an issue on GitHub or reach out via email at [your email/contact link].
+For suggestions, issues, or questions, open an issue on GitHub or reach out via email at [mailto:comicbit@gmail.com].
